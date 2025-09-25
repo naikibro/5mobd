@@ -1,0 +1,904 @@
+{
+  "data": [
+    {
+      "id": 1,
+      "name": "Concombre",
+      "description": "Juteux et sucré, idéal pour des desserts ou en-cas naturels.",
+      "price": 1.34,
+      "weight": 200,
+      "category": "Fruit",
+      "origin": "Belgique"
+    },
+    {
+      "id": 2,
+      "name": "Curry",
+      "description": "Frais et nutritif, parfait pour des plats équilibrés.",
+      "price": 4.66,
+      "weight": 500,
+      "category": "Légume",
+      "origin": "Italie"
+    },
+    {
+      "id": 3,
+      "name": "Fraise",
+      "description": "Juteux et sucré, idéal pour des desserts ou en-cas naturels.",
+      "price": 8.61,
+      "weight": 500,
+      "category": "Fruit",
+      "origin": "Belgique"
+    },
+    {
+      "id": 4,
+      "name": "Saumon",
+      "description": "Tendre et savoureuse, source de protéines de haute qualité.",
+      "price": 8.2,
+      "weight": 1000,
+      "category": "Viande",
+      "origin": "Belgique"
+    },
+    {
+      "id": 5,
+      "name": "Piment",
+      "description": "Ajoute une touche de saveurs et d'arômes à tout plat.",
+      "price": 8.4,
+      "weight": 500,
+      "category": "Épice",
+      "origin": "Allemagne"
+    },
+    {
+      "id": 6,
+      "name": "Orange",
+      "description": "Frais et nutritif, parfait pour des plats équilibrés.",
+      "price": 4.62,
+      "weight": 1000,
+      "category": "Légume",
+      "origin": "Espagne"
+    },
+    {
+      "id": 7,
+      "name": "Cabillaud",
+      "description": "Riche en oméga-3, excellent pour une alimentation saine.",
+      "price": 9.64,
+      "weight": 500,
+      "category": "Poisson",
+      "origin": "Espagne"
+    },
+    {
+      "id": 8,
+      "name": "Cannelle",
+      "description": "Juteux et sucré, idéal pour des desserts ou en-cas naturels.",
+      "price": 7.45,
+      "weight": 500,
+      "category": "Fruit",
+      "origin": "France"
+    },
+    {
+      "id": 9,
+      "name": "Ananas",
+      "description": "Tendre et savoureuse, source de protéines de haute qualité.",
+      "price": 6.39,
+      "weight": 200,
+      "category": "Viande",
+      "origin": "Espagne"
+    },
+    {
+      "id": 10,
+      "name": "Piment",
+      "description": "Tendre et savoureuse, source de protéines de haute qualité.",
+      "price": 8.76,
+      "weight": 1000,
+      "category": "Viande",
+      "origin": "France"
+    },
+    {
+      "id": 11,
+      "name": "Truite",
+      "description": "Tendre et savoureuse, source de protéines de haute qualité.",
+      "price": 3.72,
+      "weight": 200,
+      "category": "Viande",
+      "origin": "Belgique"
+    },
+    {
+      "id": 12,
+      "name": "Gingembre",
+      "description": "Frais et nutritif, parfait pour des plats équilibrés.",
+      "price": 3.67,
+      "weight": 500,
+      "category": "Légume",
+      "origin": "Espagne"
+    },
+    {
+      "id": 13,
+      "name": "Mangue",
+      "description": "Riche en oméga-3, excellent pour une alimentation saine.",
+      "price": 7.59,
+      "weight": 1000,
+      "category": "Poisson",
+      "origin": "Belgique"
+    },
+    {
+      "id": 14,
+      "name": "Maquereau",
+      "description": "Ajoute une touche de saveurs et d'arômes à tout plat.",
+      "price": 8.09,
+      "weight": 200,
+      "category": "Épice",
+      "origin": "France"
+    },
+    {
+      "id": 15,
+      "name": "Lapin",
+      "description": "Ajoute une touche de saveurs et d'arômes à tout plat.",
+      "price": 1.19,
+      "weight": 1000,
+      "category": "Épice",
+      "origin": "Italie"
+    },
+    {
+      "id": 16,
+      "name": "Ananas",
+      "description": "Juteux et sucré, idéal pour des desserts ou en-cas naturels.",
+      "price": 4.04,
+      "weight": 500,
+      "category": "Fruit",
+      "origin": "France"
+    },
+    {
+      "id": 17,
+      "name": "Dorade",
+      "description": "Tendre et savoureuse, source de protéines de haute qualité.",
+      "price": 7.94,
+      "weight": 500,
+      "category": "Viande",
+      "origin": "Espagne"
+    },
+    {
+      "id": 18,
+      "name": "Tomate",
+      "description": "Juteux et sucré, idéal pour des desserts ou en-cas naturels.",
+      "price": 2.72,
+      "weight": 100,
+      "category": "Fruit",
+      "origin": "Belgique"
+    },
+    {
+      "id": 19,
+      "name": "Poivron",
+      "description": "Riche en oméga-3, excellent pour une alimentation saine.",
+      "price": 4.12,
+      "weight": 100,
+      "category": "Poisson",
+      "origin": "France"
+    },
+    {
+      "id": 20,
+      "name": "Gibier",
+      "description": "Tendre et savoureuse, source de protéines de haute qualité.",
+      "price": 1.44,
+      "weight": 100,
+      "category": "Viande",
+      "origin": "Allemagne"
+    },
+    {
+      "id": 21,
+      "name": "Cumin",
+      "description": "Tendre et savoureuse, source de protéines de haute qualité.",
+      "price": 9.4,
+      "weight": 1000,
+      "category": "Viande",
+      "origin": "Belgique"
+    },
+    {
+      "id": 22,
+      "name": "Maquereau",
+      "description": "Tendre et savoureuse, source de protéines de haute qualité.",
+      "price": 9.88,
+      "weight": 200,
+      "category": "Viande",
+      "origin": "Italie"
+    },
+    {
+      "id": 23,
+      "name": "Carotte",
+      "description": "Tendre et savoureuse, source de protéines de haute qualité.",
+      "price": 7.44,
+      "weight": 500,
+      "category": "Viande",
+      "origin": "Italie"
+    },
+    {
+      "id": 24,
+      "name": "Curcuma",
+      "description": "Tendre et savoureuse, source de protéines de haute qualité.",
+      "price": 5.45,
+      "weight": 500,
+      "category": "Viande",
+      "origin": "Allemagne"
+    },
+    {
+      "id": 25,
+      "name": "Sel",
+      "description": "Riche en oméga-3, excellent pour une alimentation saine.",
+      "price": 9.14,
+      "weight": 500,
+      "category": "Poisson",
+      "origin": "Allemagne"
+    },
+    {
+      "id": 26,
+      "name": "Piment",
+      "description": "Juteux et sucré, idéal pour des desserts ou en-cas naturels.",
+      "price": 1.41,
+      "weight": 500,
+      "category": "Fruit",
+      "origin": "Italie"
+    },
+    {
+      "id": 27,
+      "name": "Gingembre",
+      "description": "Tendre et savoureuse, source de protéines de haute qualité.",
+      "price": 1.92,
+      "weight": 100,
+      "category": "Viande",
+      "origin": "Allemagne"
+    },
+    {
+      "id": 28,
+      "name": "Morue",
+      "description": "Frais et nutritif, parfait pour des plats équilibrés.",
+      "price": 7.95,
+      "weight": 1000,
+      "category": "Légume",
+      "origin": "Allemagne"
+    },
+    {
+      "id": 29,
+      "name": "Salade",
+      "description": "Riche en oméga-3, excellent pour une alimentation saine.",
+      "price": 9.9,
+      "weight": 100,
+      "category": "Poisson",
+      "origin": "Espagne"
+    },
+    {
+      "id": 30,
+      "name": "Cumin",
+      "description": "Riche en oméga-3, excellent pour une alimentation saine.",
+      "price": 6.36,
+      "weight": 1000,
+      "category": "Poisson",
+      "origin": "Allemagne"
+    },
+    {
+      "id": 31,
+      "name": "Poivron",
+      "description": "Ajoute une touche de saveurs et d'arômes à tout plat.",
+      "price": 9.97,
+      "weight": 1000,
+      "category": "Épice",
+      "origin": "Italie"
+    },
+    {
+      "id": 32,
+      "name": "Lapin",
+      "description": "Tendre et savoureuse, source de protéines de haute qualité.",
+      "price": 1.78,
+      "weight": 200,
+      "category": "Viande",
+      "origin": "Italie"
+    },
+    {
+      "id": 33,
+      "name": "Gingembre",
+      "description": "Riche en oméga-3, excellent pour une alimentation saine.",
+      "price": 1.81,
+      "weight": 200,
+      "category": "Poisson",
+      "origin": "France"
+    },
+    {
+      "id": 34,
+      "name": "Poivre",
+      "description": "Ajoute une touche de saveurs et d'arômes à tout plat.",
+      "price": 9.2,
+      "weight": 200,
+      "category": "Épice",
+      "origin": "Allemagne"
+    },
+    {
+      "id": 35,
+      "name": "Curry",
+      "description": "Juteux et sucré, idéal pour des desserts ou en-cas naturels.",
+      "price": 4.07,
+      "weight": 200,
+      "category": "Fruit",
+      "origin": "Italie"
+    },
+    {
+      "id": 36,
+      "name": "Pomme de terre",
+      "description": "Ajoute une touche de saveurs et d'arômes à tout plat.",
+      "price": 6.12,
+      "weight": 500,
+      "category": "Épice",
+      "origin": "Espagne"
+    },
+    {
+      "id": 37,
+      "name": "Pomme de terre",
+      "description": "Juteux et sucré, idéal pour des desserts ou en-cas naturels.",
+      "price": 4.54,
+      "weight": 100,
+      "category": "Fruit",
+      "origin": "Belgique"
+    },
+    {
+      "id": 38,
+      "name": "Banane",
+      "description": "Juteux et sucré, idéal pour des desserts ou en-cas naturels.",
+      "price": 2.43,
+      "weight": 500,
+      "category": "Fruit",
+      "origin": "Espagne"
+    },
+    {
+      "id": 39,
+      "name": "Courgette",
+      "description": "Riche en oméga-3, excellent pour une alimentation saine.",
+      "price": 9.64,
+      "weight": 500,
+      "category": "Poisson",
+      "origin": "Allemagne"
+    },
+    {
+      "id": 40,
+      "name": "Lapin",
+      "description": "Ajoute une touche de saveurs et d'arômes à tout plat.",
+      "price": 7.88,
+      "weight": 100,
+      "category": "Épice",
+      "origin": "France"
+    },
+    {
+      "id": 41,
+      "name": "Banane",
+      "description": "Tendre et savoureuse, source de protéines de haute qualité.",
+      "price": 8.31,
+      "weight": 200,
+      "category": "Viande",
+      "origin": "Espagne"
+    },
+    {
+      "id": 42,
+      "name": "Carotte",
+      "description": "Riche en oméga-3, excellent pour une alimentation saine.",
+      "price": 3.86,
+      "weight": 500,
+      "category": "Poisson",
+      "origin": "Belgique"
+    },
+    {
+      "id": 43,
+      "name": "Cannelle",
+      "description": "Frais et nutritif, parfait pour des plats équilibrés.",
+      "price": 8.1,
+      "weight": 100,
+      "category": "Légume",
+      "origin": "France"
+    },
+    {
+      "id": 44,
+      "name": "Aubergine",
+      "description": "Ajoute une touche de saveurs et d'arômes à tout plat.",
+      "price": 3.65,
+      "weight": 500,
+      "category": "Épice",
+      "origin": "Belgique"
+    },
+    {
+      "id": 45,
+      "name": "Aubergine",
+      "description": "Ajoute une touche de saveurs et d'arômes à tout plat.",
+      "price": 2.34,
+      "weight": 200,
+      "category": "Épice",
+      "origin": "Espagne"
+    },
+    {
+      "id": 46,
+      "name": "Paprika",
+      "description": "Juteux et sucré, idéal pour des desserts ou en-cas naturels.",
+      "price": 6.35,
+      "weight": 500,
+      "category": "Fruit",
+      "origin": "Italie"
+    },
+    {
+      "id": 47,
+      "name": "Pomme",
+      "description": "Juteux et sucré, idéal pour des desserts ou en-cas naturels.",
+      "price": 3.34,
+      "weight": 100,
+      "category": "Fruit",
+      "origin": "Italie"
+    },
+    {
+      "id": 48,
+      "name": "Agneau",
+      "description": "Tendre et savoureuse, source de protéines de haute qualité.",
+      "price": 8.45,
+      "weight": 100,
+      "category": "Viande",
+      "origin": "Italie"
+    },
+    {
+      "id": 49,
+      "name": "Maquereau",
+      "description": "Tendre et savoureuse, source de protéines de haute qualité.",
+      "price": 9.14,
+      "weight": 500,
+      "category": "Viande",
+      "origin": "Belgique"
+    },
+    {
+      "id": 50,
+      "name": "Banane",
+      "description": "Tendre et savoureuse, source de protéines de haute qualité.",
+      "price": 9.14,
+      "weight": 500,
+      "category": "Viande",
+      "origin": "Espagne"
+    },
+    {
+      "id": 51,
+      "name": "Pomme",
+      "description": "Juteux et sucré, idéal pour des desserts ou en-cas naturels.",
+      "price": 7.21,
+      "weight": 500,
+      "category": "Fruit",
+      "origin": "Italie"
+    },
+    {
+      "id": 52,
+      "name": "Courgette",
+      "description": "Riche en oméga-3, excellent pour une alimentation saine.",
+      "price": 7.67,
+      "weight": 500,
+      "category": "Poisson",
+      "origin": "Espagne"
+    },
+    {
+      "id": 53,
+      "name": "Boeuf",
+      "description": "Ajoute une touche de saveurs et d'arômes à tout plat.",
+      "price": 6.53,
+      "weight": 200,
+      "category": "Épice",
+      "origin": "Allemagne"
+    },
+    {
+      "id": 54,
+      "name": "Curry",
+      "description": "Juteux et sucré, idéal pour des desserts ou en-cas naturels.",
+      "price": 5.64,
+      "weight": 1000,
+      "category": "Fruit",
+      "origin": "Belgique"
+    },
+    {
+      "id": 55,
+      "name": "Kiwi",
+      "description": "Ajoute une touche de saveurs et d'arômes à tout plat.",
+      "price": 7.06,
+      "weight": 200,
+      "category": "Épice",
+      "origin": "Allemagne"
+    },
+    {
+      "id": 56,
+      "name": "Courgette",
+      "description": "Ajoute une touche de saveurs et d'arômes à tout plat.",
+      "price": 1.27,
+      "weight": 200,
+      "category": "Épice",
+      "origin": "Italie"
+    },
+    {
+      "id": 57,
+      "name": "Saumon",
+      "description": "Tendre et savoureuse, source de protéines de haute qualité.",
+      "price": 5.4,
+      "weight": 200,
+      "category": "Viande",
+      "origin": "Italie"
+    },
+    {
+      "id": 58,
+      "name": "Lapin",
+      "description": "Riche en oméga-3, excellent pour une alimentation saine.",
+      "price": 5.99,
+      "weight": 100,
+      "category": "Poisson",
+      "origin": "Allemagne"
+    },
+    {
+      "id": 59,
+      "name": "Boeuf",
+      "description": "Frais et nutritif, parfait pour des plats équilibrés.",
+      "price": 3.19,
+      "weight": 1000,
+      "category": "Légume",
+      "origin": "Belgique"
+    },
+    {
+      "id": 60,
+      "name": "Bison",
+      "description": "Ajoute une touche de saveurs et d'arômes à tout plat.",
+      "price": 9.7,
+      "weight": 200,
+      "category": "Épice",
+      "origin": "Espagne"
+    },
+    {
+      "id": 61,
+      "name": "Morue",
+      "description": "Riche en oméga-3, excellent pour une alimentation saine.",
+      "price": 6.7,
+      "weight": 100,
+      "category": "Poisson",
+      "origin": "Italie"
+    },
+    {
+      "id": 62,
+      "name": "Cardamome",
+      "description": "Riche en oméga-3, excellent pour une alimentation saine.",
+      "price": 9.03,
+      "weight": 500,
+      "category": "Poisson",
+      "origin": "Espagne"
+    },
+    {
+      "id": 63,
+      "name": "Lapin",
+      "description": "Tendre et savoureuse, source de protéines de haute qualité.",
+      "price": 7.1,
+      "weight": 1000,
+      "category": "Viande",
+      "origin": "Belgique"
+    },
+    {
+      "id": 64,
+      "name": "Agneau",
+      "description": "Frais et nutritif, parfait pour des plats équilibrés.",
+      "price": 1.56,
+      "weight": 100,
+      "category": "Légume",
+      "origin": "Allemagne"
+    },
+    {
+      "id": 65,
+      "name": "Chou",
+      "description": "Frais et nutritif, parfait pour des plats équilibrés.",
+      "price": 8.77,
+      "weight": 100,
+      "category": "Légume",
+      "origin": "France"
+    },
+    {
+      "id": 66,
+      "name": "Chou",
+      "description": "Frais et nutritif, parfait pour des plats équilibrés.",
+      "price": 6.33,
+      "weight": 200,
+      "category": "Légume",
+      "origin": "Espagne"
+    },
+    {
+      "id": 67,
+      "name": "Curcuma",
+      "description": "Riche en oméga-3, excellent pour une alimentation saine.",
+      "price": 8.55,
+      "weight": 200,
+      "category": "Poisson",
+      "origin": "Italie"
+    },
+    {
+      "id": 68,
+      "name": "Poivron",
+      "description": "Ajoute une touche de saveurs et d'arômes à tout plat.",
+      "price": 8.56,
+      "weight": 1000,
+      "category": "Épice",
+      "origin": "Italie"
+    },
+    {
+      "id": 69,
+      "name": "Ananas",
+      "description": "Riche en oméga-3, excellent pour une alimentation saine.",
+      "price": 8.38,
+      "weight": 200,
+      "category": "Poisson",
+      "origin": "Belgique"
+    },
+    {
+      "id": 70,
+      "name": "Saumon",
+      "description": "Ajoute une touche de saveurs et d'arômes à tout plat.",
+      "price": 5.81,
+      "weight": 100,
+      "category": "Épice",
+      "origin": "Allemagne"
+    },
+    {
+      "id": 71,
+      "name": "Pomme de terre",
+      "description": "Riche en oméga-3, excellent pour une alimentation saine.",
+      "price": 3.79,
+      "weight": 500,
+      "category": "Poisson",
+      "origin": "France"
+    },
+    {
+      "id": 72,
+      "name": "Cardamome",
+      "description": "Riche en oméga-3, excellent pour une alimentation saine.",
+      "price": 4.21,
+      "weight": 500,
+      "category": "Poisson",
+      "origin": "France"
+    },
+    {
+      "id": 73,
+      "name": "Cannelle",
+      "description": "Ajoute une touche de saveurs et d'arômes à tout plat.",
+      "price": 9.63,
+      "weight": 200,
+      "category": "Épice",
+      "origin": "France"
+    },
+    {
+      "id": 74,
+      "name": "Hareng",
+      "description": "Riche en oméga-3, excellent pour une alimentation saine.",
+      "price": 9.93,
+      "weight": 500,
+      "category": "Poisson",
+      "origin": "Allemagne"
+    },
+    {
+      "id": 75,
+      "name": "Morue",
+      "description": "Ajoute une touche de saveurs et d'arômes à tout plat.",
+      "price": 9.03,
+      "weight": 1000,
+      "category": "Épice",
+      "origin": "Belgique"
+    },
+    {
+      "id": 76,
+      "name": "Curcuma",
+      "description": "Juteux et sucré, idéal pour des desserts ou en-cas naturels.",
+      "price": 9.44,
+      "weight": 200,
+      "category": "Fruit",
+      "origin": "France"
+    },
+    {
+      "id": 77,
+      "name": "Curry",
+      "description": "Tendre et savoureuse, source de protéines de haute qualité.",
+      "price": 8.64,
+      "weight": 500,
+      "category": "Viande",
+      "origin": "France"
+    },
+    {
+      "id": 78,
+      "name": "Boeuf",
+      "description": "Ajoute une touche de saveurs et d'arômes à tout plat.",
+      "price": 2.37,
+      "weight": 100,
+      "category": "Épice",
+      "origin": "France"
+    },
+    {
+      "id": 79,
+      "name": "Thon",
+      "description": "Juteux et sucré, idéal pour des desserts ou en-cas naturels.",
+      "price": 3.31,
+      "weight": 1000,
+      "category": "Fruit",
+      "origin": "Espagne"
+    },
+    {
+      "id": 80,
+      "name": "Brocoli",
+      "description": "Tendre et savoureuse, source de protéines de haute qualité.",
+      "price": 7.09,
+      "weight": 100,
+      "category": "Viande",
+      "origin": "France"
+    },
+    {
+      "id": 81,
+      "name": "Brocoli",
+      "description": "Juteux et sucré, idéal pour des desserts ou en-cas naturels.",
+      "price": 1.18,
+      "weight": 100,
+      "category": "Fruit",
+      "origin": "Allemagne"
+    },
+    {
+      "id": 82,
+      "name": "Poivron",
+      "description": "Tendre et savoureuse, source de protéines de haute qualité.",
+      "price": 7.18,
+      "weight": 200,
+      "category": "Viande",
+      "origin": "Belgique"
+    },
+    {
+      "id": 83,
+      "name": "Raisin",
+      "description": "Riche en oméga-3, excellent pour une alimentation saine.",
+      "price": 5.81,
+      "weight": 100,
+      "category": "Poisson",
+      "origin": "France"
+    },
+    {
+      "id": 84,
+      "name": "Cannelle",
+      "description": "Riche en oméga-3, excellent pour une alimentation saine.",
+      "price": 8.79,
+      "weight": 500,
+      "category": "Poisson",
+      "origin": "France"
+    },
+    {
+      "id": 85,
+      "name": "Thon",
+      "description": "Tendre et savoureuse, source de protéines de haute qualité.",
+      "price": 7.72,
+      "weight": 1000,
+      "category": "Viande",
+      "origin": "Belgique"
+    },
+    {
+      "id": 86,
+      "name": "Mangue",
+      "description": "Riche en oméga-3, excellent pour une alimentation saine.",
+      "price": 2.63,
+      "weight": 1000,
+      "category": "Poisson",
+      "origin": "Espagne"
+    },
+    {
+      "id": 87,
+      "name": "Agneau",
+      "description": "Ajoute une touche de saveurs et d'arômes à tout plat.",
+      "price": 4.57,
+      "weight": 200,
+      "category": "Épice",
+      "origin": "Italie"
+    },
+    {
+      "id": 88,
+      "name": "Concombre",
+      "description": "Frais et nutritif, parfait pour des plats équilibrés.",
+      "price": 1.71,
+      "weight": 500,
+      "category": "Légume",
+      "origin": "Allemagne"
+    },
+    {
+      "id": 89,
+      "name": "Concombre",
+      "description": "Frais et nutritif, parfait pour des plats équilibrés.",
+      "price": 2.07,
+      "weight": 500,
+      "category": "Légume",
+      "origin": "Belgique"
+    },
+    {
+      "id": 90,
+      "name": "Kiwi",
+      "description": "Frais et nutritif, parfait pour des plats équilibrés.",
+      "price": 4.35,
+      "weight": 500,
+      "category": "Légume",
+      "origin": "France"
+    },
+    {
+      "id": 91,
+      "name": "Citron",
+      "description": "Frais et nutritif, parfait pour des plats équilibrés.",
+      "price": 5.33,
+      "weight": 100,
+      "category": "Légume",
+      "origin": "France"
+    },
+    {
+      "id": 92,
+      "name": "Curry",
+      "description": "Juteux et sucré, idéal pour des desserts ou en-cas naturels.",
+      "price": 7.96,
+      "weight": 200,
+      "category": "Fruit",
+      "origin": "Espagne"
+    },
+    {
+      "id": 93,
+      "name": "Pomme",
+      "description": "Juteux et sucré, idéal pour des desserts ou en-cas naturels.",
+      "price": 5.36,
+      "weight": 200,
+      "category": "Fruit",
+      "origin": "France"
+    },
+    {
+      "id": 94,
+      "name": "Poire",
+      "description": "Juteux et sucré, idéal pour des desserts ou en-cas naturels.",
+      "price": 7.85,
+      "weight": 500,
+      "category": "Fruit",
+      "origin": "Allemagne"
+    },
+    {
+      "id": 95,
+      "name": "Bar",
+      "description": "Riche en oméga-3, excellent pour une alimentation saine.",
+      "price": 9.04,
+      "weight": 100,
+      "category": "Poisson",
+      "origin": "Belgique"
+    },
+    {
+      "id": 96,
+      "name": "Sel",
+      "description": "Frais et nutritif, parfait pour des plats équilibrés.",
+      "price": 5.58,
+      "weight": 500,
+      "category": "Légume",
+      "origin": "Belgique"
+    },
+    {
+      "id": 97,
+      "name": "Morue",
+      "description": "Tendre et savoureuse, source de protéines de haute qualité.",
+      "price": 5.88,
+      "weight": 1000,
+      "category": "Viande",
+      "origin": "France"
+    },
+    {
+      "id": 98,
+      "name": "Gingembre",
+      "description": "Ajoute une touche de saveurs et d'arômes à tout plat.",
+      "price": 7.39,
+      "weight": 100,
+      "category": "Épice",
+      "origin": "Italie"
+    },
+    {
+      "id": 99,
+      "name": "Kiwi",
+      "description": "Ajoute une touche de saveurs et d'arômes à tout plat.",
+      "price": 1.47,
+      "weight": 200,
+      "category": "Épice",
+      "origin": "France"
+    },
+    {
+      "id": 100,
+      "name": "Gingembre",
+      "description": "Riche en oméga-3, excellent pour une alimentation saine.",
+      "price": 9.57,
+      "weight": 100,
+      "category": "Poisson",
+      "origin": "Allemagne"
+    }
+  ]
+}
