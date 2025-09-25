@@ -1,7 +1,15 @@
 import React from "react";
-import { View, Text, ScrollView, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+} from "react-native";
 import { RouteProp } from "@react-navigation/native";
 import { RootStackParamList } from "../types/navigation";
+import { useShoppingList } from "../context/ShoppingListContext";
 
 type IngredientDetailsScreenRouteProp = RouteProp<
   RootStackParamList,
@@ -14,6 +22,20 @@ interface Props {
 
 const IngredientDetailsScreen: React.FC<Props> = ({ route }) => {
   const { ingredient } = route.params;
+  const { addItem, shoppingList } = useShoppingList();
+
+  const handleAddToShoppingList = () => {
+    addItem(ingredient);
+    Alert.alert(
+      "Ajouté !",
+      `${ingredient.name} a été ajouté à votre liste de courses`,
+      [{ text: "OK" }]
+    );
+  };
+
+  const isInShoppingList = shoppingList.some(
+    (item) => item.id === ingredient.id
+  );
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -52,6 +74,16 @@ const IngredientDetailsScreen: React.FC<Props> = ({ route }) => {
           €{(ingredient.price / (ingredient.weight / 1000)).toFixed(2)}/kg
         </Text>
       </View>
+
+      <TouchableOpacity
+        style={[styles.addButton, isInShoppingList && styles.addButtonDisabled]}
+        onPress={handleAddToShoppingList}
+        disabled={isInShoppingList}
+      >
+        <Text style={styles.addButtonText}>
+          {isInShoppingList ? "Déjà dans la liste" : "Ajouter à ma liste"}
+        </Text>
+      </TouchableOpacity>
     </ScrollView>
   );
 };
@@ -141,6 +173,21 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#666",
     fontStyle: "italic",
+  },
+  addButton: {
+    backgroundColor: "#2ecc71",
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 16,
+    alignItems: "center",
+  },
+  addButtonDisabled: {
+    backgroundColor: "#bdc3c7",
+  },
+  addButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
   },
 });
 

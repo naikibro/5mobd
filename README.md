@@ -1,12 +1,15 @@
 # Shopping List App (5mobd)
 
-A React Native shopping list application built with Expo and React Navigation.
+A React Native shopping list application built with Expo and React Navigation with shopping cart functionality and persistent storage.
 
 ## Features
 
 - **Ingredients List Screen**: Displays all ingredients in a scrollable list using FlatList
 - **Ingredient Details Screen**: Shows detailed information about a selected ingredient using ScrollView
-- **Navigation**: Seamless navigation between screens using React Navigation
+- **My Shopping Screen**: Manage your shopping list with add/remove/quantity controls
+- **Bottom Tab Navigation**: Easy switching between ingredients and shopping list
+- **Persistent Storage**: Shopping list is saved locally using AsyncStorage
+- **Context Management**: Global state management for shopping list
 - **Clean Design**: Modern, minimal UI with card-based layout
 
 ## Screens
@@ -23,7 +26,16 @@ A React Native shopping list application built with Expo and React Navigation.
 - Uses `ScrollView` to display detailed ingredient information
 - Shows description, category, weight, origin, and pricing details
 - Calculates price per kilogram
+- **Add to Shopping List** button to add ingredients to your cart
 - Organized in sections for better readability
+
+### 3. My Shopping Screen
+
+- Displays your current shopping list
+- Shows quantity controls for each item
+- Remove items with confirmation dialog
+- Total price calculation
+- Empty state when no items are added
 
 ## Technical Implementation
 
