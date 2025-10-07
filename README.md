@@ -9,12 +9,12 @@ A React Native shopping list application built with Expo and React Navigation wi
   - Login with email and password
   - Profile management (update name, email, password)
   - Logout functionality
-- **Ingredients List Screen**: Displays all ingredients in a scrollable list using FlatList
+- **Ingredients List Screen**: Displays all ingredients from Firestore in a scrollable list using FlatList
 - **Ingredient Details Screen**: Shows detailed information about a selected ingredient using ScrollView
 - **My Shopping Screen**: Manage your shopping list with add/remove/quantity controls
 - **Profile Screen**: Update user information and manage account
 - **Bottom Tab Navigation**: Easy switching between ingredients, shopping list, and profile
-- **Persistent Storage**: Shopping list is saved locally using AsyncStorage
+- **Cloud Storage**: Shopping lists are saved per user in Firestore
 - **Context Management**: Global state management for shopping list and authentication
 - **Clean Design**: Modern, minimal UI with card-based layout
 
@@ -22,8 +22,10 @@ A React Native shopping list application built with Expo and React Navigation wi
 
 ### 1. Ingredients List Screen
 
-- Uses `FlatList` to display all ingredients from `data.json`
+- Uses `FlatList` to display all ingredients from Firestore
 - Shows ingredient name, category, and price
+- Real-time data fetching from cloud database
+- Loading state with spinner
 - Tap any ingredient to navigate to details screen
 - Clean card-based design with shadows
 
@@ -37,9 +39,11 @@ A React Native shopping list application built with Expo and React Navigation wi
 
 ### 3. My Shopping Screen
 
-- Displays your current shopping list
+- Displays your current shopping list from Firestore
+- Per-user shopping lists (isolated by user ID)
 - Shows quantity controls for each item
 - Remove items with confirmation dialog
+- Real-time updates to cloud database
 - Total price calculation
 - Empty state when no items are added
 
@@ -83,11 +87,19 @@ A React Native shopping list application built with Expo and React Navigation wi
 
 ### Data Structure
 
-The app uses the provided `data.json` file with 100 ingredients containing:
+The app uses Firestore database with two collections:
+
+**ingredients** - Contains all available ingredients:
 
 - ID, name, description
 - Price, weight, category
 - Origin information
+
+**shoppingList** - Per-user shopping lists:
+
+- User ID, ingredient details
+- Quantity, added date
+- All ingredient properties
 
 ## Getting Started
 
@@ -101,29 +113,40 @@ npm install
 
 1. Go to [Firebase Console](https://console.firebase.google.com/)
 2. Create a new project or use an existing one
-3. Enable Authentication with Email/Password provider
-4. Get your Firebase configuration from Project Settings > General
-5. Update `firebaseConfig.ts` with your credentials:
+3. Enable **Authentication** with Email/Password provider
+4. Enable **Firestore Database** in production mode
+5. Get your Firebase configuration from Project Settings > General
+6. Create a `.env` file with your Firebase credentials (see `src/config/env.ts` for required variables)
 
-```typescript
-const firebaseConfig = {
-  apiKey: "your-api-key",
-  authDomain: "your-project.firebaseapp.com",
-  projectId: "your-project-id",
-  storageBucket: "your-project.appspot.com",
-  messagingSenderId: "your-sender-id",
-  appId: "your-app-id",
-  measurementId: "your-measurement-id",
-};
+### 3. Import Data to Firestore:
+
+To import the ingredients data to Firestore:
+
+1. Go to Firebase Console > Project Settings > Service Accounts
+2. Click "Generate new private key" and save as `serviceAccountKey.json` in the project root
+3. Install firebase-admin:
+
+```bash
+npm install --save-dev firebase-admin
 ```
 
-### 3. Start the development server:
+4. Run the import script:
+
+```bash
+node importData.js
+```
+
+This will import all 100 ingredients from `data.json` to your Firestore `ingredients` collection.
+
+### 4. Start the development server:
 
 ```bash
 npm start
 ```
 
-### 4. Open the app on your device using the Expo Go app or run on simulator
+### 5. Open the app:
+
+Open the app on your device using the Expo Go app or run on simulator
 
 ## Project Structure
 
@@ -154,4 +177,6 @@ data.json                            # Ingredients data
 - **Consistent Typography**: Clear hierarchy with proper font weights
 - **Color Scheme**: Green accents for prices, neutral grays for text
 - **Shadows & Elevation**: Subtle depth for better visual separation
+- **Responsive Design**: Works on different screen sizes
+
 - **Responsive Design**: Works on different screen sizes

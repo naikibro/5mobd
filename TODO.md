@@ -6,153 +6,100 @@ SUPINFO
     Mes cours
     EDSQUARE
 
-TP 4 : Gestion d’utilisateurs
+TP 5 : Firestore et la gestion de la data
 
     5MOBD
-    TP 4 : Gestion d’utilisateurs
+    TP 5 : Firestore et la gestion de la data
 
-Reprenez votre application crée lors du précédant travaux pratiques, nous allons durant cette sessions y ajouter une logique de gestion d’utilisateur.
+Reprenez votre application crée lors du précédant travaux pratiques, nous allons durant cette sessions y ajouter la gestion des courses par utilisateurs.
 
 Prérequis:
 
-Création d’un projet firebase:
+    Reprendre le projet Firebase précédent
 
-    Créer un projet sur la console en ligne: https://console.firebase.google.com/u/0/
-    Installer le sdk:
-
-npx expo install firebase
-
-    Créer un fichier firebaseConfig.js avec à l’intérieur:
-
-const firebaseConfig = {
-apiKey: 'api-key',
-authDomain: 'project-id.firebaseapp.com',
-databaseURL: '<https://project-id.firebaseio.com>',
-projectId: 'project-id',
-storageBucket: 'project-id.appspot.com',
-messagingSenderId: 'sender-id',
-appId: 'app-id',
-measurementId: 'G-measurement-id',
-};
-
-const app = initializeApp(firebaseConfig);
-
-    Lancer la commande:
-
-npx expo customize metro.config.js
-
-    Puis mettre à jour le fichier metro.config.js
-
-const { getDefaultConfig } = require('@expo/metro-config');
-
-const defaultConfig = getDefaultConfig(\_\_dirname);
-defaultConfig.resolver.sourceExts.push('cjs');
-
-module.exports = defaultConfig;
-
-Les utilisateurs
+Récupération et envoi de données
 
 Vous devez présentez les nouvelles fonctionnalités suivantes:
 
-    Écran d’inscription avec mail et mot de passe
-    Écran de connexion avec mail et mot de passe
-    Écran mon profil à ajouter à la bottom bar principale. Il devra proposer de quoi mettre à jour son profil (Pseudo, mail et mot de passe) ainsi que la possibilité de se déconnecter
+    Récupération des ingrédients en lignes pour la page “Listes des ingrédients” et “Détails d’un ingrédient”
+    Passer par Firebase pour la gestion des listes de courses utilisateurs
+    Supprimer la logique de sauvegarde via l’async-storage et passer par Firestore pour création de listes de courses.
 
-Voici les méthodes à utiliser:
+Pour la gestion des données, vous utiliserez Firestore:
 
-    createUserWithEmailAndPassword pour créer un utiliser à partir d’un mot de passe et d’une adresse mail:
+    Activer la database Firestore sur firebase console: Firebase console
+    Ajouter une collection avec les ingrédients:
+        Récupérer le fichier data.json du TP 3.
+        Aller dans les paramètres de votre projet Firebase, dans l’onglet “Comptes de Service”, puis cliquer sur “Générer une nouvelle clé privée”
+        Créer le script suivant importData.js puis modifier les require et le nom de la collection à votre convenance:
 
-const auth = getAuth();
-createUserWithEmailAndPassword(auth, email, password)
-.then((userCredential) => {
-// Signed up
-const user = userCredential.user;
-// ...
-})
-.catch((error) => {
-const errorCode = error.code;
-const errorMessage = error.message;
-// ..
+const admin = require('firebase-admin');
+const serviceAccount = require('./path/to/your/serviceAccountKey.json');
+
+// Initialiser l'application Firebase Admin
+admin.initializeApp({
+credential: admin.credential.cert(serviceAccount)
 });
 
-    Connecter un utilisateur:
+const firestore = admin.firestore();
 
-const auth = getAuth();
-signInWithEmailAndPassword(auth, email, password)
-.then((userCredential) => {
-// Signed in
-const user = userCredential.user;
-// ...
-})
-.catch((error) => {
-const errorCode = error.code;
-const errorMessage = error.message;
+// Chemin vers votre fichier JSON
+const data = require('./path/to/your/data.json').data;
+
+// Fonction pour importer les données dans Firestore
+async function importData() {
+const collectionRef = firestore.collection('your_collection_name');
+
+const batch = firestore.batch();
+
+data.forEach((item) => {
+const docRef = collectionRef.doc(); // Crée un nouveau document avec un ID unique
+batch.set(docRef, item);
 });
 
-    Récupérer l’utilisateur courant:
-
-const auth = getAuth();
-const user = auth.currentUser;
-if (user !== null) {
-// The user object has basic properties such as display name, email, etc.
-const displayName = user.displayName;
-const email = user.email;
-const photoURL = user.photoURL;
-const emailVerified = user.emailVerified;
-
-// The user's ID, unique to the Firebase project. Do NOT use
-// this value to authenticate with your backend server, if
-// you have one. Use User.getToken() instead.
-const uid = user.uid;
+await batch.commit();
+console.log('Data imported successfully!');
 }
 
-    Mettre à jour l’utilisateur courant:
+importData();
 
-import { getAuth, updateProfile } from "firebase/auth";
-const auth = getAuth();
-updateProfile(auth.currentUser, {
-displayName: "Jane Q. User", photoURL: "<https://example.com/jane-q-user/profile.jpg>;"
-}).then(() => {
-// Profile updated!
-// ...
-}).catch((error) => {
-// An error occurred
-// ...
+    Vous pourrez ensuite importer votre DB
+
+> const db = getFirestore(app);
+
+    Vous utiliserez une autre collection pour vos listes de courses.
+    Pour ajouter des listes de courses:
+
+import { collection, addDoc } from "firebase/firestore";
+
+try {
+const docRef = await addDoc(collection(db, "shoppingList"), {
+name: 'Poivre',
+...etc
+});
+console.log("Document written with ID: ", docRef.id);
+} catch (e) {
+console.error("Error adding document: ", e);
+}
+
+    Pour lire de manière plus spécifique:
+
+const querySnapshot = await getDocs(collection(db, "users"));
+querySnapshot.forEach((doc) => {
+console.log(`${doc.id} => ${doc.data()}`);
 });
 
-    Mettre à jour l’adresse mail:
+    Pour supprimer des éléments:
 
-import { getAuth, updateEmail } from "firebase/auth";
-const auth = getAuth();
-updateEmail(auth.currentUser, "user@example.com").then(() => {
-// Email updated!
-// ...
-}).catch((error) => {
-// An error occurred
-// ...
-});
+import { doc, deleteDoc } from "firebase/firestore";
 
-    Mettre à jour le mot de passe:
-
-import { getAuth, updatePassword } from "firebase/auth";
-
-const auth = getAuth();
-
-const user = auth.currentUser;
-const newPassword = getASecureRandomPassword();
-
-updatePassword(user, newPassword).then(() => {
-// Update successful.
-}).catch((error) => {
-// An error ocurred
-// ...
-});
+await deleteDoc(doc(db, "shoppingList", "Liste 1"));
 
 Vous êtes libre de réaliser la structure et d'utiliser les éléments que vous souhaitez, tant que ceux-ci sont pertinent.
 
 Pensez à sauvegarder votre travail, votre page code sera réutilisée dans les prochains travaux pratiques.
 
-Modifié le: mercredi 3 janvier 2024, 15:54
+Modifié le: mercredi 3 janvier 2024, 15:56
 Activité précédente
 Aller à…
 Activité suivante
