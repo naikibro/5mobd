@@ -8,7 +8,12 @@ import {
   Alert,
   ScrollView,
   ActivityIndicator,
+  Platform,
+  Dimensions,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+
+const { width } = Dimensions.get("window");
 import { useAuth } from "../context/AuthContext";
 
 const ProfileScreen = () => {
@@ -110,8 +115,18 @@ const ProfileScreen = () => {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <View style={styles.profileHeader}>
+        <Ionicons name="person-circle" size={80} color="#2ecc71" />
+        <Text style={styles.profileName}>
+          {user?.displayName || "Utilisateur"}
+        </Text>
+      </View>
+
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Informations du profil</Text>
+        <Text style={styles.sectionTitle}>
+          <Ionicons name="person" size={18} color="#333" /> Informations du
+          profil
+        </Text>
 
         <Text style={styles.label}>Pseudo</Text>
         <TextInput
@@ -130,7 +145,9 @@ const ProfileScreen = () => {
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Email</Text>
+        <Text style={styles.sectionTitle}>
+          <Ionicons name="mail" size={18} color="#333" /> Email
+        </Text>
 
         <Text style={styles.label}>Adresse email</Text>
         <TextInput
@@ -151,7 +168,10 @@ const ProfileScreen = () => {
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Changer le mot de passe</Text>
+        <Text style={styles.sectionTitle}>
+          <Ionicons name="lock-closed" size={18} color="#333" /> Changer le mot
+          de passe
+        </Text>
 
         <Text style={styles.label}>Nouveau mot de passe</Text>
         <TextInput
@@ -180,6 +200,12 @@ const ProfileScreen = () => {
       </View>
 
       <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+        <Ionicons
+          name="log-out"
+          size={20}
+          color="#fff"
+          style={{ marginRight: 8 }}
+        />
         <Text style={styles.logoutButtonText}>Se déconnecter</Text>
       </TouchableOpacity>
     </ScrollView>
@@ -193,6 +219,24 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 16,
+    ...Platform.select({
+      web: {
+        maxWidth: 600,
+        alignSelf: "center",
+        width: "100%",
+      },
+    }),
+  },
+  profileHeader: {
+    alignItems: "center",
+    marginBottom: 24,
+    paddingVertical: 20,
+  },
+  profileName: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: "#333",
+    marginTop: 12,
   },
   section: {
     backgroundColor: "#fff",
@@ -249,6 +293,8 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "center",
     marginBottom: 32,
   },
   logoutButtonText: {

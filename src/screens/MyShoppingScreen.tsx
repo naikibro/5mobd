@@ -6,7 +6,12 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
+  Platform,
+  Dimensions,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+
+const { width } = Dimensions.get("window");
 import { useShoppingList } from "../context/ShoppingListContext";
 
 const MyShoppingScreen = () => {
@@ -87,6 +92,7 @@ const MyShoppingScreen = () => {
   if (shoppingList.length === 0) {
     return (
       <View style={styles.emptyContainer}>
+        <Ionicons name="cart-outline" size={80} color="#bdc3c7" />
         <Text style={styles.emptyText}>Votre liste de courses est vide</Text>
         <Text style={styles.emptySubtext}>
           Ajoutez des ingrédients depuis la liste des ingrédients
@@ -120,6 +126,13 @@ const styles = StyleSheet.create({
   list: {
     padding: 16,
     paddingBottom: 80,
+    ...Platform.select({
+      web: {
+        maxWidth: 800,
+        alignSelf: "center",
+        width: "100%",
+      },
+    }),
   },
   item: {
     backgroundColor: "#fff",

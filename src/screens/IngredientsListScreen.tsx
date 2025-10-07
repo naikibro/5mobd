@@ -6,7 +6,11 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
+  Platform,
+  Dimensions,
 } from "react-native";
+
+const { width } = Dimensions.get("window");
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { collection, getDocs } from "firebase/firestore";
@@ -77,6 +81,11 @@ const IngredientsListScreen = () => {
         renderItem={renderIngredient}
         keyExtractor={(item) => item.id.toString()}
         contentContainerStyle={styles.list}
+        numColumns={Platform.select({ web: width > 768 ? 2 : 1, default: 1 })}
+        key={Platform.select({
+          web: width > 768 ? "two-columns" : "one-column",
+          default: "one-column",
+        })}
       />
     </View>
   );
@@ -98,6 +107,13 @@ const styles = StyleSheet.create({
   },
   list: {
     padding: 16,
+    ...Platform.select({
+      web: {
+        maxWidth: 1200,
+        alignSelf: "center",
+        width: "100%",
+      },
+    }),
   },
   item: {
     backgroundColor: "#fff",
@@ -112,6 +128,12 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 3.84,
     elevation: 5,
+    ...Platform.select({
+      web: {
+        flex: width > 768 ? 0.48 : 1,
+        marginHorizontal: width > 768 ? "1%" : 0,
+      },
+    }),
   },
   itemContent: {
     flexDirection: "row",

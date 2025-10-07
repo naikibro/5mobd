@@ -6,7 +6,11 @@ import {
   StyleSheet,
   TouchableOpacity,
   Alert,
+  Platform,
+  Dimensions,
 } from "react-native";
+
+const { width } = Dimensions.get("window");
 import { RouteProp } from "@react-navigation/native";
 import { RootStackParamList } from "../types/navigation";
 import { useShoppingList } from "../context/ShoppingListContext";
@@ -95,6 +99,13 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 16,
+    ...Platform.select({
+      web: {
+        maxWidth: 800,
+        alignSelf: "center",
+        width: "100%",
+      },
+    }),
   },
   header: {
     backgroundColor: "#fff",

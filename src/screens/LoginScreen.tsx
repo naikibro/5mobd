@@ -9,8 +9,12 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  Dimensions,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../context/AuthContext";
+
+const { width } = Dimensions.get("window");
 
 interface Props {
   navigation: any;
@@ -44,6 +48,9 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
       style={styles.container}
     >
       <View style={styles.content}>
+        <View style={styles.logoContainer}>
+          <Ionicons name="log-in" size={60} color="#2ecc71" />
+        </View>
         <Text style={styles.title}>Connexion</Text>
         <Text style={styles.subtitle}>Connectez-vous à votre compte</Text>
 
@@ -98,6 +105,17 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     padding: 24,
+    ...Platform.select({
+      web: {
+        maxWidth: 500,
+        alignSelf: "center",
+        width: "100%",
+      },
+    }),
+  },
+  logoContainer: {
+    alignItems: "center",
+    marginBottom: 24,
   },
   title: {
     fontSize: 32,
