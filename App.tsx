@@ -3,10 +3,15 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
+import { ActivityIndicator, View } from "react-native";
 import IngredientsListScreen from "./src/screens/IngredientsListScreen";
 import IngredientDetailsScreen from "./src/screens/IngredientDetailsScreen";
 import MyShoppingScreen from "./src/screens/MyShoppingScreen";
+import LoginScreen from "./src/screens/LoginScreen";
+import SignupScreen from "./src/screens/SignupScreen";
+import ProfileScreen from "./src/screens/ProfileScreen";
 import { ShoppingListProvider } from "./src/context/ShoppingListContext";
+import { AuthProvider, useAuth } from "./src/context/AuthContext";
 import { RootStackParamList } from "./src/types/navigation";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -40,6 +45,8 @@ function MainTabs() {
             iconName = focused ? "list" : "list-outline";
           } else if (route.name === "MyShopping") {
             iconName = focused ? "cart" : "cart-outline";
+          } else if (route.name === "Profile") {
+            iconName = focused ? "person" : "person-outline";
           } else {
             iconName = "list-outline";
           }
@@ -60,16 +67,46 @@ function MainTabs() {
         component={MyShoppingScreen}
         options={{ title: "Mes courses" }}
       />
+      <Tab.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{ title: "Mon profil" }}
+      />
     </Tab.Navigator>
   );
 }
 
+function AuthStack() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="Login" component={LoginScreen} />
+      <Stack.Screen name="Signup" component={SignupScreen} />
+    </Stack.Navigator>
+  );
+}
+
+function AppNavigator() {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color="#2ecc71" />
+      </View>
+    );
+  }
+
+  return user ? <MainTabs /> : <AuthStack />;
+}
+
 export default function App() {
   return (
-    <ShoppingListProvider>
-      <NavigationContainer>
-        <MainTabs />
-      </NavigationContainer>
-    </ShoppingListProvider>
+    <AuthProvider>
+      <ShoppingListProvider>
+        <NavigationContainer>
+          <AppNavigator />
+        </NavigationContainer>
+      </ShoppingListProvider>
+    </AuthProvider>
   );
 }

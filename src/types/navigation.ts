@@ -11,4 +11,6 @@ export interface Ingredient {
 export type RootStackParamList = {
   IngredientsList: undefined;
   IngredientDetails: { ingredient: Ingredient };
+  Login: undefined;
+  Signup: undefined;
 };

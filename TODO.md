@@ -6,84 +6,153 @@ SUPINFO
     Mes cours
     EDSQUARE
 
-TP 3 : Mise à jour de l’application
+TP 4 : Gestion d’utilisateurs
 
     5MOBD
-    TP 3 : Mise à jour de l’application
+    TP 4 : Gestion d’utilisateurs
 
-Reprenez votre application crée lors du précédant travaux pratiques, nous allons durant cette sessions y ajouter une fonctionnalité d’ajout de commande ainsi qu’une sauvegarde de liste de course.
-1 - Mes courses
+Reprenez votre application crée lors du précédant travaux pratiques, nous allons durant cette sessions y ajouter une logique de gestion d’utilisateur.
+
+Prérequis:
+
+Création d’un projet firebase:
+
+    Créer un projet sur la console en ligne: https://console.firebase.google.com/u/0/
+    Installer le sdk:
+
+npx expo install firebase
+
+    Créer un fichier firebaseConfig.js avec à l’intérieur:
+
+const firebaseConfig = {
+apiKey: 'api-key',
+authDomain: 'project-id.firebaseapp.com',
+databaseURL: '<https://project-id.firebaseio.com>',
+projectId: 'project-id',
+storageBucket: 'project-id.appspot.com',
+messagingSenderId: 'sender-id',
+appId: 'app-id',
+measurementId: 'G-measurement-id',
+};
+
+const app = initializeApp(firebaseConfig);
+
+    Lancer la commande:
+
+npx expo customize metro.config.js
+
+    Puis mettre à jour le fichier metro.config.js
+
+const { getDefaultConfig } = require('@expo/metro-config');
+
+const defaultConfig = getDefaultConfig(\_\_dirname);
+defaultConfig.resolver.sourceExts.push('cjs');
+
+module.exports = defaultConfig;
+
+Les utilisateurs
 
 Vous devez présentez les nouvelles fonctionnalités suivantes:
 
-    Écran Mes courses, avec une liste des différents ingrédients sélectionnés. Il devra aussi être possible de supprimer un ingrédient à partir de cette écran.
-    Présenter les écrans “Mes courses” et “Listes des courses” via une bottom bar (BottomTabBar ou Tabs selon la méthode de navigation que vous aurez décidé au travaux pratiques précédents).
-    Ajout d’un ingrédient, à partir de l’écran “Détail d’un ingrédient”
+    Écran d’inscription avec mail et mot de passe
+    Écran de connexion avec mail et mot de passe
+    Écran mon profil à ajouter à la bottom bar principale. Il devra proposer de quoi mettre à jour son profil (Pseudo, mail et mot de passe) ainsi que la possibilité de se déconnecter
 
-Pour la structure de navigation, voici un exemple de ce que vous pourriez faire avec react-navigation:
+Voici les méthodes à utiliser:
 
-    Utiliser la méthode createBottomTabNavigator afin de créer un nouveau Navigator.
-    Ajouter à l’intérieur de ce navigator 2 Screens: “Mes Courses” et “Listes des Courses”
-    Supprimer le screen “Listes des Courses” de votre navigator principale
-    Ajouter à votre navigator principale votre nouveau Navigator
+    createUserWithEmailAndPassword pour créer un utiliser à partir d’un mot de passe et d’une adresse mail:
 
-Vous utiliserez la logique de Context pour gérer de manière global les données:
+const auth = getAuth();
+createUserWithEmailAndPassword(auth, email, password)
+.then((userCredential) => {
+// Signed up
+const user = userCredential.user;
+// ...
+})
+.catch((error) => {
+const errorCode = error.code;
+const errorMessage = error.message;
+// ..
+});
 
-    Création d’un context avec createContext, il retournera 3 valeurs (vous êtes libre sur le nommage):
-        shoppingList: Tableau de course
-        addItem: Méthode permettant d’ajouter un ingrédient
-        removeItem: Méthode permettant de supprimer un ingrédient
-    Création d’un provider: A partir du context précédent, vous créerez un Provider à mettre au début de votre cycle de rendu. Voici un exemple de format possible:
+    Connecter un utilisateur:
 
-const ShoppingListProvider = ({ children }) => {
-const [shoppingList, setShoppingList] = useState<ShoppingItem[]>([]);
+const auth = getAuth();
+signInWithEmailAndPassword(auth, email, password)
+.then((userCredential) => {
+// Signed in
+const user = userCredential.user;
+// ...
+})
+.catch((error) => {
+const errorCode = error.code;
+const errorMessage = error.message;
+});
 
-const addItem = (item: ShoppingItem) => {
-setShoppingList(prevList => [...prevList, item]);
-};
+    Récupérer l’utilisateur courant:
 
-const removeItem = (itemId: string) => {
-setShoppingList(prevList => prevList.filter(item => item.id !== itemId));
-};
+const auth = getAuth();
+const user = auth.currentUser;
+if (user !== null) {
+// The user object has basic properties such as display name, email, etc.
+const displayName = user.displayName;
+const email = user.email;
+const photoURL = user.photoURL;
+const emailVerified = user.emailVerified;
 
-useEffect(() => {
-// Ici, vous pouvez initialiser la liste de courses, par exemple en la chargeant depuis le stockage local
-}, []);
-
-return (
-<ShoppingListContext.Provider value={{ shoppingList, addItem, removeItem }}>
-{children}
-</ShoppingListContext.Provider>
-);
-};
-
-    Création ensuite d’un hook utilisant useContext afin de récupérer les valeurs que vous avez partagées précédemment. Voici un exemple:
-
-const useShoppingList = () =>{
-const context = useContext(ShoppingListContext);
-
-return context;
+// The user's ID, unique to the Firebase project. Do NOT use
+// this value to authenticate with your backend server, if
+// you have one. Use User.getToken() instead.
+const uid = user.uid;
 }
 
-2 - Local Storage
+    Mettre à jour l’utilisateur courant:
 
-Durant cette partie, vous allez faire en sorte que vos courses soient sauvegardé sur le cache du téléphone et persiste après que l’application est été fermé puis réouverte
+import { getAuth, updateProfile } from "firebase/auth";
+const auth = getAuth();
+updateProfile(auth.currentUser, {
+displayName: "Jane Q. User", photoURL: "<https://example.com/jane-q-user/profile.jpg>;"
+}).then(() => {
+// Profile updated!
+// ...
+}).catch((error) => {
+// An error occurred
+// ...
+});
 
-Pour cela, utilisez la librairie suivante: @react-native-async-storage/async-storage
+    Mettre à jour l’adresse mail:
 
-    Vous utiliserez la méthode getItem afin de récupérer vos données:
+import { getAuth, updateEmail } from "firebase/auth";
+const auth = getAuth();
+updateEmail(auth.currentUser, "user@example.com").then(() => {
+// Email updated!
+// ...
+}).catch((error) => {
+// An error occurred
+// ...
+});
 
-const value = await AsyncStorage.getItem('my-key');
+    Mettre à jour le mot de passe:
 
-    Puis la méthode setItem afin de sauvegarder toutes les nouvelles entrées:
+import { getAuth, updatePassword } from "firebase/auth";
 
-await AsyncStorage.setItem('my-key', value);
+const auth = getAuth();
+
+const user = auth.currentUser;
+const newPassword = getASecureRandomPassword();
+
+updatePassword(user, newPassword).then(() => {
+// Update successful.
+}).catch((error) => {
+// An error ocurred
+// ...
+});
 
 Vous êtes libre de réaliser la structure et d'utiliser les éléments que vous souhaitez, tant que ceux-ci sont pertinent.
 
 Pensez à sauvegarder votre travail, votre page code sera réutilisée dans les prochains travaux pratiques.
 
-Modifié le: mercredi 3 janvier 2024, 15:49
+Modifié le: mercredi 3 janvier 2024, 15:54
 Activité précédente
 Aller à…
 Activité suivante
