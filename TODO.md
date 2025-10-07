@@ -6,100 +6,93 @@ SUPINFO
     Mes cours
     EDSQUARE
 
-TP 5 : Firestore et la gestion de la data
+TP 6 : Tester son application
 
     5MOBD
-    TP 5 : Firestore et la gestion de la data
+    TP 6 : Tester son application
 
-Reprenez votre application crée lors du précédant travaux pratiques, nous allons durant cette sessions y ajouter la gestion des courses par utilisateurs.
+Reprenez votre application crée lors du précédant travaux pratiques, nous allons durant cette sessions y ajouter des tests unitaires et end to end.
+1 - Tests unitaires
 
-Prérequis:
+En utilisant la librairie react-native-testing-librairie et la documentation, vous devrez mettre en place les tests suivants:
 
-    Reprendre le projet Firebase précédent
+    Tester la navigation sur un bouton de l’application (exemple: item ingrédient sur l’écran “liste des ingrédients”, qui redirige sur l’écran “détail d’un ingrédient”). Si vous utilisez expo-router, vous aurez besoin de cette documentation.
+    Tester l’écran de connexion en faisant un mock de la librairie firebase
 
-Récupération et envoi de données
+Vous pouvez vous aider de ces exemples:
 
-Vous devez présentez les nouvelles fonctionnalités suivantes:
+test('navigation on button press', () => {
+const { getByText, findByText } = render(
+<MockedNavigator component={IngredientsListScreen} />
+);
 
-    Récupération des ingrédients en lignes pour la page “Listes des ingrédients” et “Détails d’un ingrédient”
-    Passer par Firebase pour la gestion des listes de courses utilisateurs
-    Supprimer la logique de sauvegarde via l’async-storage et passer par Firestore pour création de listes de courses.
+const button = getByText('Voir Détails'); // Texte du bouton sur IngredientsListScreen
+fireEvent.press(button);
 
-Pour la gestion des données, vous utiliserez Firestore:
-
-    Activer la database Firestore sur firebase console: Firebase console
-    Ajouter une collection avec les ingrédients:
-        Récupérer le fichier data.json du TP 3.
-        Aller dans les paramètres de votre projet Firebase, dans l’onglet “Comptes de Service”, puis cliquer sur “Générer une nouvelle clé privée”
-        Créer le script suivant importData.js puis modifier les require et le nom de la collection à votre convenance:
-
-const admin = require('firebase-admin');
-const serviceAccount = require('./path/to/your/serviceAccountKey.json');
-
-// Initialiser l'application Firebase Admin
-admin.initializeApp({
-credential: admin.credential.cert(serviceAccount)
+const detailScreen = findByText('Détail Ingrédient'); // Texte attendu sur IngredientDetailScreen
+expect(detailScreen).toBeTruthy();
 });
 
-const firestore = admin.firestore();
+// Mock de Firebase
+jest.mock('firebase/app', () => ({
+auth: jest.fn().mockReturnThis(),
+signInWithEmailAndPassword: jest.fn(() => Promise.resolve('Mocked user')),
+}));
 
-// Chemin vers votre fichier JSON
-const data = require('./path/to/your/data.json').data;
+2 - Test end to end
 
-// Fonction pour importer les données dans Firestore
-async function importData() {
-const collectionRef = firestore.collection('your_collection_name');
+En utilisant Detox mettre en place l’user journey complète d’un utilisateur:
 
-const batch = firestore.batch();
+    Inscription
+    Connexion
+    Création d’une liste de course
+    Ajout et suppression d’un ingrédient
+    Déconnexion
 
-data.forEach((item) => {
-const docRef = collectionRef.doc(); // Crée un nouveau document avec un ID unique
-batch.set(docRef, item);
+Setup de Detox: https://wix.github.io/Detox/docs/introduction/environment-setup
+
+    Installer le CLI:
+
+npm install detox-cli --global
+
+    Ajouter la dependance au projet:
+
+npm install detox --save-dev
+
+    Initialiser le projet detox:
+
+detox init
+
+    Ajouter des scripts au package.json du projet:
+
+"e2e:test": "detox test -c ios.release",
+"e2e:build": "detox build -c ios.release",
+"e2e:ci": "npm run e2e:build && npm run e2e:test -- --cleanup"
+
+    Dans le dossier e2e/tests créer par detox, vous pourrez y mettre vos tests. Voici un exemple d’un test pour l’écran de connexion:
+
+describe('User signup journey', () => {
+
+it('should sign up a new user', async () => {
+await device.launchApp({newInstance: true});
+
+    await expect(element(by.id('signup-screen'))).toBeVisible();
+    await element(by.id('signup-email')).typeText('test@example.com');
+    await element(by.id('signup-password')).typeText('password');
+    await element(by.id('signup-button')).tap();
+
+    await expect(element(by.id('home-screen'))).toBeVisible();
+
 });
 
-await batch.commit();
-console.log('Data imported successfully!');
-}
-
-importData();
-
-    Vous pourrez ensuite importer votre DB
-
-> const db = getFirestore(app);
-
-    Vous utiliserez une autre collection pour vos listes de courses.
-    Pour ajouter des listes de courses:
-
-import { collection, addDoc } from "firebase/firestore";
-
-try {
-const docRef = await addDoc(collection(db, "shoppingList"), {
-name: 'Poivre',
-...etc
+// Les autres tests suivront ici...
 });
-console.log("Document written with ID: ", docRef.id);
-} catch (e) {
-console.error("Error adding document: ", e);
-}
-
-    Pour lire de manière plus spécifique:
-
-const querySnapshot = await getDocs(collection(db, "users"));
-querySnapshot.forEach((doc) => {
-console.log(`${doc.id} => ${doc.data()}`);
-});
-
-    Pour supprimer des éléments:
-
-import { doc, deleteDoc } from "firebase/firestore";
-
-await deleteDoc(doc(db, "shoppingList", "Liste 1"));
 
 Vous êtes libre de réaliser la structure et d'utiliser les éléments que vous souhaitez, tant que ceux-ci sont pertinent.
 
-Pensez à sauvegarder votre travail, votre page code sera réutilisée dans les prochains travaux pratiques.
+Pensez à sauvegarder votre travail, votre code sera réutilisée dans les prochains travaux pratiques.
 
-Modifié le: mercredi 3 janvier 2024, 15:56
+Modifié le: mercredi 3 janvier 2024, 16:00
 Activité précédente
 Aller à…
 Activité suivante

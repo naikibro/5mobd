@@ -44,3 +44,5 @@ serviceAccountKey.json
 # generated native folders
 /ios
 /android
+
+coverage/
