@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
   Platform,
   ActivityIndicator,
   Dimensions,
+  Animated,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../context/AuthContext";
@@ -25,6 +26,45 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const { signIn } = useAuth();
+
+  // Animation values for slide-in effect
+  const [logoAnim] = useState(new Animated.Value(-100));
+  const [titleAnim] = useState(new Animated.Value(-100));
+  const [subtitleAnim] = useState(new Animated.Value(-100));
+  const [emailAnim] = useState(new Animated.Value(-100));
+  const [passwordAnim] = useState(new Animated.Value(-100));
+  const [buttonAnim] = useState(new Animated.Value(-100));
+  const [footerAnim] = useState(new Animated.Value(-100));
+
+  useEffect(() => {
+    // Staggered slide-in animations from top to bottom
+    const animations = [
+      { anim: logoAnim, delay: 0 },
+      { anim: titleAnim, delay: 100 },
+      { anim: subtitleAnim, delay: 200 },
+      { anim: emailAnim, delay: 300 },
+      { anim: passwordAnim, delay: 400 },
+      { anim: buttonAnim, delay: 500 },
+      { anim: footerAnim, delay: 600 },
+    ];
+
+    animations.forEach(({ anim, delay }) => {
+      Animated.timing(anim, {
+        toValue: 0,
+        duration: 600,
+        delay,
+        useNativeDriver: true,
+      }).start();
+    });
+  }, [
+    logoAnim,
+    titleAnim,
+    subtitleAnim,
+    emailAnim,
+    passwordAnim,
+    buttonAnim,
+    footerAnim,
+  ]);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -48,49 +88,73 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
       style={styles.container}
     >
       <View style={styles.content}>
-        <View style={styles.logoContainer}>
-          <Ionicons name="log-in" size={60} color="#2ecc71" />
-        </View>
-        <Text style={styles.title}>Connexion</Text>
-        <Text style={styles.subtitle}>Connectez-vous à votre compte</Text>
-
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-          autoCapitalize="none"
-          autoComplete="email"
-        />
-
-        <TextInput
-          style={styles.input}
-          placeholder="Mot de passe"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-          autoComplete="password"
-        />
-
-        <TouchableOpacity
-          style={[styles.button, loading && styles.buttonDisabled]}
-          onPress={handleLogin}
-          disabled={loading}
+        <Animated.View
+          style={[
+            styles.logoContainer,
+            { transform: [{ translateY: logoAnim }] },
+          ]}
         >
-          {loading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.buttonText}>Se connecter</Text>
-          )}
-        </TouchableOpacity>
+          <Ionicons name="log-in" size={60} color="#2ecc71" />
+        </Animated.View>
+        <Animated.Text
+          style={[styles.title, { transform: [{ translateY: titleAnim }] }]}
+        >
+          Connexion
+        </Animated.Text>
+        <Animated.Text
+          style={[
+            styles.subtitle,
+            { transform: [{ translateY: subtitleAnim }] },
+          ]}
+        >
+          Connectez-vous à votre compte
+        </Animated.Text>
 
-        <View style={styles.footer}>
+        <Animated.View style={{ transform: [{ translateY: emailAnim }] }}>
+          <TextInput
+            style={styles.input}
+            placeholder="Email"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoComplete="email"
+          />
+        </Animated.View>
+
+        <Animated.View style={{ transform: [{ translateY: passwordAnim }] }}>
+          <TextInput
+            style={styles.input}
+            placeholder="Mot de passe"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+            autoComplete="password"
+          />
+        </Animated.View>
+
+        <Animated.View style={{ transform: [{ translateY: buttonAnim }] }}>
+          <TouchableOpacity
+            style={[styles.button, loading && styles.buttonDisabled]}
+            onPress={handleLogin}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.buttonText}>Se connecter</Text>
+            )}
+          </TouchableOpacity>
+        </Animated.View>
+
+        <Animated.View
+          style={[styles.footer, { transform: [{ translateY: footerAnim }] }]}
+        >
           <Text style={styles.footerText}>Pas encore de compte ?</Text>
           <TouchableOpacity onPress={() => navigation.navigate("Signup")}>
             <Text style={styles.linkText}>S'inscrire</Text>
           </TouchableOpacity>
-        </View>
+        </Animated.View>
       </View>
     </KeyboardAvoidingView>
   );

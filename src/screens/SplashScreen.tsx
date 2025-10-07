@@ -7,7 +7,10 @@ interface SplashScreenProps {
 }
 
 // Animated component that works on all platforms
-function AnimatedSplash() {
+const AnimatedSplash = React.forwardRef<
+  { fadeOut: () => void },
+  { onFadeOutComplete?: () => void }
+>(({ onFadeOutComplete }, ref) => {
   const [rotateAnim] = useState(new Animated.Value(0));
   const [scaleAnim] = useState(new Animated.Value(0.8));
   const [fadeAnim] = useState(new Animated.Value(0));
@@ -57,6 +60,22 @@ function AnimatedSplash() {
     };
   }, [rotateAnim, scaleAnim, fadeAnim]);
 
+  // Function to trigger fade out animation
+  const fadeOut = () => {
+    Animated.timing(fadeAnim, {
+      toValue: 0,
+      duration: 300,
+      useNativeDriver: true,
+    }).start(() => {
+      onFadeOutComplete?.();
+    });
+  };
+
+  // Expose fadeOut function to parent component
+  React.useImperativeHandle(ref, () => ({
+    fadeOut,
+  }));
+
   const spin = rotateAnim.interpolate({
     inputRange: [0, 1],
     outputRange: ["0deg", "360deg"],
@@ -66,30 +85,40 @@ function AnimatedSplash() {
     <Animated.View style={[styles.animationContainer, { opacity: fadeAnim }]}>
       <Animated.View
         style={{
-          transform: [{ rotate: spin }, { scale: scaleAnim }],
+          transform: [{ scale: scaleAnim }],
         }}
       >
-        <Ionicons name="cart" size={80} color="#2ecc71" />
+        <Ionicons name="location-outline" size={80} color="#2ecc71" />
       </Animated.View>
       <Text style={styles.appName}>5MOBD</Text>
-      <Text style={styles.subtitle}>Votre liste de courses</Text>
     </Animated.View>
   );
-}
+});
 
 export default function SplashScreen({ onFinish }: SplashScreenProps) {
+  const animatedSplashRef = React.useRef<{ fadeOut: () => void }>(null);
+
   useEffect(() => {
-    // Auto-finish splash screen after animation
+    // Auto-finish splash screen after animation with fade out
     const timeout = setTimeout(() => {
-      onFinish();
+      // Trigger fade out animation before finishing
+      animatedSplashRef.current?.fadeOut();
     }, 2500); // 2.5 seconds
 
     return () => clearTimeout(timeout);
   }, [onFinish]);
 
+  const handleFadeOutComplete = () => {
+    // Call onFinish after fade out animation completes
+    onFinish();
+  };
+
   return (
     <View style={styles.container}>
-      <AnimatedSplash />
+      <AnimatedSplash
+        ref={animatedSplashRef}
+        onFadeOutComplete={handleFadeOutComplete}
+      />
     </View>
   );
 }
