@@ -13,13 +13,28 @@
     },
     "assetBundlePatterns": ["**/*"],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Cette application utilise votre localisation pour afficher les adresses sur la carte et vous permettre de créer de nouvelles adresses.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Cette application utilise votre localisation pour afficher les adresses sur la carte et vous permettre de créer de nouvelles adresses.",
+        "NSPhotoLibraryUsageDescription": "Cette application a besoin d'accéder à votre photothèque pour vous permettre de sélectionner une photo de profil.",
+        "NSCameraUsageDescription": "Cette application a besoin d'accéder à votre appareil photo pour vous permettre de prendre une photo de profil."
+      },
+      "bundleIdentifier": "com.devlab-admin.x5mobd"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ],
+      "package": "com.devlab_admin.x5mobd"
     },
     "web": {
       "favicon": "./assets/favicon.png",

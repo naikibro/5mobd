@@ -12,6 +12,7 @@ import {
   Dimensions,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import ProfilePhotoPicker from "../components/ProfilePhotoPicker";
 
 const { width } = Dimensions.get("window");
 import { useAuth } from "../context/AuthContext";
@@ -19,10 +20,12 @@ import { useAuth } from "../context/AuthContext";
 const ProfileScreen = () => {
   const {
     user,
+    userProfile,
     logout,
     updateUserProfile,
     updateUserEmail,
     updateUserPassword,
+    updateUserPhoto,
   } = useAuth();
   const [displayName, setDisplayName] = useState(user?.displayName || "");
   const [email, setEmail] = useState(user?.email || "");
@@ -96,6 +99,15 @@ const ProfileScreen = () => {
     }
   };
 
+  const handlePhotoChange = async (photoUrl: string) => {
+    try {
+      await updateUserPhoto(photoUrl);
+      Alert.alert("Succès", "Photo de profil mise à jour avec succès");
+    } catch (error: any) {
+      Alert.alert("Erreur", "Impossible de mettre à jour la photo de profil");
+    }
+  };
+
   const handleLogout = () => {
     Alert.alert("Déconnexion", "Êtes-vous sûr de vouloir vous déconnecter ?", [
       { text: "Annuler", style: "cancel" },
@@ -115,12 +127,11 @@ const ProfileScreen = () => {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <View style={styles.profileHeader}>
-        <Ionicons name="person-circle" size={80} color="#2ecc71" />
-        <Text style={styles.profileName}>
-          {user?.displayName || "Utilisateur"}
-        </Text>
-      </View>
+      <ProfilePhotoPicker
+        currentPhotoUrl={userProfile?.photoURL || user?.photoURL || undefined}
+        onPhotoChange={handlePhotoChange}
+        userId={user?.uid || ""}
+      />
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>
@@ -226,17 +237,6 @@ const styles = StyleSheet.create({
         width: "100%",
       },
     }),
-  },
-  profileHeader: {
-    alignItems: "center",
-    marginBottom: 24,
-    paddingVertical: 20,
-  },
-  profileName: {
-    fontSize: 24,
-    fontWeight: "700",
-    color: "#333",
-    marginTop: 12,
   },
   section: {
     backgroundColor: "#fff",

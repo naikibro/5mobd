@@ -1,0 +1,50 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Users collection - users can read/write their own data
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Addresses collection
+    match /addresses/{addressId} {
+      // Allow read if address is public OR user is the owner
+      allow read: if request.auth != null && 
+        (resource.data.isPublic == true || resource.data.userId == request.auth.uid);
+      
+      // Allow create if user is authenticated
+      allow create: if request.auth != null && 
+        request.auth.uid == resource.data.userId;
+      
+      // Allow update/delete only if user is the owner
+      allow update, delete: if request.auth != null && 
+        resource.data.userId == request.auth.uid;
+    }
+    
+    // Reviews collection
+    match /reviews/{reviewId} {
+      // Allow read for all authenticated users
+      allow read: if request.auth != null;
+      
+      // Allow create if user is authenticated and owns the review
+      allow create: if request.auth != null && 
+        request.auth.uid == resource.data.userId;
+      
+      // Allow update/delete only if user is the owner
+      allow update, delete: if request.auth != null && 
+        resource.data.userId == request.auth.uid;
+    }
+    
+    // User profiles collection (for profile photos and additional user data)
+    match /userProfiles/{userId} {
+      // Allow read/write only if user is the owner
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Deny all other access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

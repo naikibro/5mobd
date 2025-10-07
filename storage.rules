@@ -1,0 +1,29 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    // User profile photos - users can read/write their own photos
+    match /profile-photos/{userId}/{fileName} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Address photos - users can read all, write their own
+    match /address-photos/{addressId}/{fileName} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && 
+        firestore.get(/databases/(default)/documents/addresses/{addressId}).data.userId == request.auth.uid;
+    }
+    
+    // Review photos - users can read all, write their own
+    match /review-photos/{reviewId}/{fileName} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && 
+        firestore.get(/databases/(default)/documents/reviews/{reviewId}).data.userId == request.auth.uid;
+    }
+    
+    // Deny all other access
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

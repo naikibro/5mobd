@@ -3,7 +3,7 @@ module.exports = {
   setupFiles: ["<rootDir>/jest-setup-before.js"],
   setupFilesAfterEnv: ["<rootDir>/jest.setup.js"],
   transformIgnorePatterns: [
-    "node_modules/(?!(react-native|@react-native|@react-native-community|expo|expo-modules-core|@expo|@expo-google-fonts|react-navigation|@react-navigation|@unimodules|unimodules|firebase|@firebase|@react-native-async-storage)/)",
+    "node_modules/(?!(react-native|@react-native|@react-native-community|expo|expo-modules-core|@expo|@expo-google-fonts|react-navigation|@react-navigation|@unimodules|unimodules|firebase|@firebase|@react-native-async-storage|@expo/vector-icons|expo-font|expo-image-picker|expo-image-manipulator|expo-location|react-native-maps|expo-asset)/)",
   ],
   testMatch: ["**/__tests__/**/*.test.[jt]s?(x)"],
   collectCoverageFrom: [

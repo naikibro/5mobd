@@ -4,32 +4,45 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
 import { ActivityIndicator, View } from "react-native";
-import IngredientsListScreen from "./src/screens/IngredientsListScreen";
-import IngredientDetailsScreen from "./src/screens/IngredientDetailsScreen";
-import MyShoppingScreen from "./src/screens/MyShoppingScreen";
+import AddressListScreen from "./src/screens/AddressListScreen";
+import AddressDetailsScreen from "./src/screens/AddressDetailsScreen";
+import MyAddressesScreen from "./src/screens/MyAddressesScreen";
+import MapScreen from "./src/screens/MapScreen";
+import CreateAddressScreen from "./src/screens/CreateAddressScreen";
+import ReviewScreen from "./src/screens/ReviewScreen";
 import LoginScreen from "./src/screens/LoginScreen";
 import SignupScreen from "./src/screens/SignupScreen";
 import ProfileScreen from "./src/screens/ProfileScreen";
 import SplashScreen from "./src/screens/SplashScreen";
-import { ShoppingListProvider } from "./src/context/ShoppingListContext";
+import { AddressProvider } from "./src/context/AddressContext";
 import { AuthProvider, useAuth } from "./src/context/AuthContext";
-import { RootStackParamList } from "./src/types/navigation";
+import { RootStackParamList, MainTabParamList } from "./src/types/navigation";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
-const Tab = createBottomTabNavigator();
+const Tab = createBottomTabNavigator<MainTabParamList>();
 
-function IngredientsStack() {
+function AddressStack() {
   return (
     <Stack.Navigator>
       <Stack.Screen
-        name="IngredientsList"
-        component={IngredientsListScreen}
-        options={{ title: "Liste d'ingrédients" }}
+        name="AddressList"
+        component={AddressListScreen}
+        options={{ title: "Adresses publiques" }}
       />
       <Stack.Screen
-        name="IngredientDetails"
-        component={IngredientDetailsScreen}
+        name="AddressDetails"
+        component={AddressDetailsScreen}
         options={{ title: "Détails" }}
+      />
+      <Stack.Screen
+        name="CreateAddress"
+        component={CreateAddressScreen}
+        options={{ title: "Créer une adresse" }}
+      />
+      <Stack.Screen
+        name="Reviews"
+        component={ReviewScreen}
+        options={{ title: "Laisser un avis" }}
       />
     </Stack.Navigator>
   );
@@ -42,14 +55,16 @@ function MainTabs() {
         tabBarIcon: ({ focused, color, size }) => {
           let iconName: keyof typeof Ionicons.glyphMap;
 
-          if (route.name === "Ingredients") {
-            iconName = focused ? "list" : "list-outline";
-          } else if (route.name === "MyShopping") {
-            iconName = focused ? "cart" : "cart-outline";
+          if (route.name === "Addresses") {
+            iconName = focused ? "location" : "location-outline";
+          } else if (route.name === "Map") {
+            iconName = focused ? "map" : "map-outline";
+          } else if (route.name === "MyAddresses") {
+            iconName = focused ? "bookmark" : "bookmark-outline";
           } else if (route.name === "Profile") {
             iconName = focused ? "person" : "person-outline";
           } else {
-            iconName = "list-outline";
+            iconName = "location-outline";
           }
 
           return <Ionicons name={iconName} size={size} color={color} />;
@@ -59,14 +74,19 @@ function MainTabs() {
       })}
     >
       <Tab.Screen
-        name="Ingredients"
-        component={IngredientsStack}
-        options={{ title: "Ingrédients", headerShown: false }}
+        name="Addresses"
+        component={AddressStack}
+        options={{ title: "Adresses", headerShown: false }}
       />
       <Tab.Screen
-        name="MyShopping"
-        component={MyShoppingScreen}
-        options={{ title: "Mes courses" }}
+        name="Map"
+        component={MapScreen}
+        options={{ title: "Carte" }}
+      />
+      <Tab.Screen
+        name="MyAddresses"
+        component={MyAddressesScreen}
+        options={{ title: "Mes adresses" }}
       />
       <Tab.Screen
         name="Profile"
@@ -108,11 +128,11 @@ function AppNavigator() {
 export default function App() {
   return (
     <AuthProvider>
-      <ShoppingListProvider>
+      <AddressProvider>
         <NavigationContainer>
           <AppNavigator />
         </NavigationContainer>
-      </ShoppingListProvider>
+      </AddressProvider>
     </AuthProvider>
   );
 }
