@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Dimensions,
@@ -14,6 +14,7 @@ import {
   View,
 } from "react-native";
 import PhotoGallery from "../components/PhotoGallery";
+import { useGeocoding } from "../hooks/useGeocoding";
 import { useAddressStore } from "../stores/addressStore";
 import { Address } from "../types/address";
 import { AddressStackParamList } from "../types/navigation";
@@ -30,20 +31,87 @@ const AddressListScreen = () => {
     addresses,
     isPolling,
   } = useAddressStore();
+  const {
+    getStreetName,
+    isLoading: isGeocodingLoading,
+    getRateLimitStatus,
+  } = useGeocoding();
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
+  const [streetNames, setStreetNames] = useState<Map<string, string>>(
+    new Map()
+  );
+  const processedAddresses = useRef(new Set<string>());
 
   useEffect(() => {
     loadAddresses();
   }, []);
 
-  const loadAddresses = async () => {
+  const loadAddresses = useCallback(async () => {
     try {
       await fetchPublicAddresses();
     } catch (error) {
       console.error("Error loading addresses:", error);
     }
-  };
+  }, [fetchPublicAddresses]);
+
+  const loadStreetNames = useCallback(async () => {
+    if (addresses.length === 0) return;
+
+    const newStreetNames: string[] = [];
+
+    for (const address of addresses) {
+      const key = `${address.latitude},${address.longitude}`;
+
+      // Only fetch if we haven't processed this address yet
+      if (!processedAddresses.current.has(key)) {
+        processedAddresses.current.add(key);
+
+        try {
+          const streetName = await getStreetName({
+            latitude: address.latitude,
+            longitude: address.longitude,
+          });
+
+          if (streetName) {
+            newStreetNames.push(key, streetName);
+          }
+
+          // Debug rate limiting status
+          const rateLimitStatus = getRateLimitStatus();
+          if (rateLimitStatus.callsThisMinute > 20) {
+            console.log(
+              `Rate limit status: ${rateLimitStatus.callsThisMinute}/${rateLimitStatus.maxCallsPerMinute} calls this minute`
+            );
+          }
+        } catch (error) {
+          console.error("Error getting street name:", error);
+        }
+      }
+    }
+
+    // Only update state if we actually got new street names
+    if (newStreetNames.length > 0) {
+      setStreetNames((prev) => {
+        const updated = new Map(prev);
+        for (let i = 0; i < newStreetNames.length; i += 2) {
+          updated.set(newStreetNames[i], newStreetNames[i + 1]);
+        }
+        return updated;
+      });
+    }
+  }, [addresses, getStreetName]);
+
+  useEffect(() => {
+    if (addresses.length > 0) {
+      loadStreetNames();
+    }
+  }, [addresses, loadStreetNames]);
+
+  // Reset processed addresses when addresses change significantly
+  useEffect(() => {
+    processedAddresses.current.clear();
+  }, [addresses.length]);
 
   const handleSearch = async (query: string) => {
     setSearchQuery(query);
@@ -62,37 +130,50 @@ const AddressListScreen = () => {
     }
   };
 
-  const renderAddress = ({ item }: { item: Address }) => (
-    <TouchableOpacity
-      style={styles.item}
-      onPress={() => navigation.navigate("AddressDetails", { address: item })}
-    >
-      <View style={styles.photosContainer}>
-        <PhotoGallery photos={item.photos || []} />
-      </View>
-      <View style={styles.itemContent}>
-        <View style={styles.itemInfo}>
-          <Text style={styles.name}>{item.name}</Text>
-          <Text style={styles.description} numberOfLines={2}>
-            {item.description}
-          </Text>
-          <View style={styles.locationContainer}>
-            <Ionicons name="location" size={14} color="#666" />
-            <Text style={styles.location}>
-              {item.latitude.toFixed(4)}, {item.longitude.toFixed(4)}
+  const renderAddress = ({ item }: { item: Address }) => {
+    const key = `${item.latitude},${item.longitude}`;
+    const streetName = streetNames.get(key);
+
+    return (
+      <TouchableOpacity
+        style={styles.item}
+        onPress={() => navigation.navigate("AddressDetails", { address: item })}
+      >
+        <View style={styles.photosContainer}>
+          <PhotoGallery photos={item.photos || []} />
+        </View>
+        <View style={styles.itemContent}>
+          <View style={styles.itemInfo}>
+            <Text style={styles.name}>{item.name}</Text>
+            <Text style={styles.description} numberOfLines={2}>
+              {item.description}
             </Text>
+            <View style={styles.locationContainer}>
+              <Ionicons name="location" size={14} color="#666" />
+              <Text style={styles.location}>
+                {streetName ||
+                  `${item.latitude.toFixed(4)}, ${item.longitude.toFixed(4)}`}
+              </Text>
+              {isGeocodingLoading && !streetName && (
+                <ActivityIndicator
+                  size="small"
+                  color="#666"
+                  style={styles.geocodingLoader}
+                />
+              )}
+            </View>
+          </View>
+          <View style={styles.itemActions}>
+            <Ionicons
+              name={item.isPublic ? "globe" : "lock-closed"}
+              size={20}
+              color={item.isPublic ? "#2ecc71" : "#e74c3c"}
+            />
           </View>
         </View>
-        <View style={styles.itemActions}>
-          <Ionicons
-            name={item.isPublic ? "globe" : "lock-closed"}
-            size={20}
-            color={item.isPublic ? "#2ecc71" : "#e74c3c"}
-          />
-        </View>
-      </View>
-    </TouchableOpacity>
-  );
+      </TouchableOpacity>
+    );
+  };
 
   if (loading && !isPolling && addresses.length === 0) {
     return (
@@ -252,6 +333,9 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#666",
     marginLeft: 4,
+  },
+  geocodingLoader: {
+    marginLeft: 8,
   },
   itemActions: {
     marginLeft: 12,
