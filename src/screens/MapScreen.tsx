@@ -8,6 +8,7 @@ import {
   Platform,
   Dimensions,
   ActivityIndicator,
+  Animated,
 } from "react-native";
 import MapView, { Marker, Region } from "react-native-maps";
 import * as Location from "expo-location";
@@ -16,6 +17,9 @@ import { useAddressStore } from "../stores/addressStore";
 import { useAuthStore } from "../stores/authStore";
 import { Address, AddressWithReviews } from "../types/address";
 import AddressDetailsModal from "../components/AddressDetailsModal";
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { RootStackParamList } from "../types/navigation";
 
 const { width, height } = Dimensions.get("window");
 
@@ -23,6 +27,8 @@ const MapScreen = () => {
   const { fetchPublicAddresses, getAddressWithReviews, addresses } =
     useAddressStore();
   const { user } = useAuthStore();
+  const navigation =
+    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [location, setLocation] = useState<Location.LocationObject | null>(
     null
   );
@@ -32,6 +38,7 @@ const MapScreen = () => {
     useState<AddressWithReviews | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const mapRef = useRef<MapView>(null);
+  const rainbowAnimation = useRef(new Animated.Value(0)).current;
 
   const initialRegion: Region = {
     latitude: 48.8566, // Paris coordinates as default
@@ -43,7 +50,20 @@ const MapScreen = () => {
   useEffect(() => {
     getLocationPermission();
     loadAddresses();
-  }, []);
+
+    // Start rainbow animation
+    const startRainbowAnimation = () => {
+      Animated.loop(
+        Animated.timing(rainbowAnimation, {
+          toValue: 1,
+          duration: 6000, // Slower animation - 6 seconds per cycle
+          useNativeDriver: false,
+        })
+      ).start();
+    };
+
+    startRainbowAnimation();
+  }, [rainbowAnimation]);
 
   const getLocationPermission = async () => {
     try {
@@ -160,6 +180,33 @@ const MapScreen = () => {
     ));
   };
 
+  const RainbowBorder = ({ children }: { children: React.ReactNode }) => {
+    const borderColor = rainbowAnimation.interpolate({
+      inputRange: [0, 0.2, 0.4, 0.6, 0.8, 1],
+      outputRange: [
+        "#ffffff", // White
+        "#b3e5fc", // Light Blue
+        "#81d4fa", // Lighter Blue
+        "#ffb6e6", // Pink
+        "#b39ddb", // Mauve (light purple)
+        "#ffffff", // Back to white
+      ],
+    });
+
+    return (
+      <Animated.View
+        style={[
+          styles.rainbowBorder,
+          {
+            borderColor,
+          },
+        ]}
+      >
+        {children}
+      </Animated.View>
+    );
+  };
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -210,6 +257,17 @@ const MapScreen = () => {
       >
         <Ionicons name="locate" size={24} color="#fff" />
       </TouchableOpacity>
+
+      {user && (
+        <RainbowBorder>
+          <TouchableOpacity
+            style={styles.fab}
+            onPress={() => navigation.navigate("CreateAddress")}
+          >
+            <Ionicons name="add" size={24} color="#fff" />
+          </TouchableOpacity>
+        </RainbowBorder>
+      )}
 
       <View style={styles.legend}>
         <View style={styles.legendItem}>
@@ -303,6 +361,32 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
+  },
+  rainbowBorder: {
+    position: "absolute",
+    bottom: 20,
+    right: 20,
+    width: 108,
+    height: 64,
+    borderRadius: 32,
+
+    backgroundColor: "transparent",
+    borderWidth: 4,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4.65,
+  },
+  fab: {
+    backgroundColor: "#2ecc71",
+    width: 100,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: "center",
+    alignItems: "center",
   },
   legend: {
     position: "absolute",

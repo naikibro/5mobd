@@ -25,6 +25,7 @@ const MyAddressesScreen = () => {
     searchAddresses,
     loading,
     addresses,
+    isPolling,
   } = useAddressStore();
   const { user } = useAuthStore();
   const [searchQuery, setSearchQuery] = useState("");
@@ -133,7 +134,7 @@ const MyAddressesScreen = () => {
     return true;
   });
 
-  if (loading && addresses.length === 0) {
+  if (loading && !isPolling && addresses.length === 0) {
     return (
       <View style={[styles.container, styles.centered]}>
         <Text>Chargement de vos adresses...</Text>
@@ -156,7 +157,9 @@ const MyAddressesScreen = () => {
           value={searchQuery}
           onChangeText={handleSearch}
         />
-        {isSearching && <ActivityIndicator size="small" color="#2ecc71" />}
+        {(isSearching || (loading && !isPolling)) && (
+          <ActivityIndicator size="small" color="#2ecc71" />
+        )}
       </View>
 
       <View style={styles.filterContainer}>
@@ -210,6 +213,10 @@ const MyAddressesScreen = () => {
         </TouchableOpacity>
       </View>
 
+      <Text style={styles.title}>Mes adresses</Text>
+      <Text style={styles.subtitle}>
+        Trouvez ici les adresses que vous avez créées
+      </Text>
       <FlatList
         data={filteredAddresses}
         renderItem={renderAddress}
@@ -374,6 +381,19 @@ const styles = StyleSheet.create({
     color: "#999",
     textAlign: "center",
     paddingHorizontal: 32,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: "#333",
+    marginHorizontal: 16,
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: "#666",
+    marginHorizontal: 16,
+    marginBottom: 16,
   },
 });
 

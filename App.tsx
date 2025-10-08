@@ -16,35 +16,36 @@ import ProfileScreen from "./src/screens/ProfileScreen";
 import SplashScreen from "./src/screens/SplashScreen";
 import { useAuthStore } from "./src/stores/authStore";
 import { useAddressStore } from "./src/stores/addressStore";
-import { RootStackParamList, MainTabParamList } from "./src/types/navigation";
+import {
+  RootStackParamList,
+  MainTabParamList,
+  AddressStackParamList,
+} from "./src/types/navigation";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
+const AddressStackNavigator =
+  createNativeStackNavigator<AddressStackParamList>();
 
 function AddressStack() {
   return (
-    <Stack.Navigator>
-      <Stack.Screen
+    <AddressStackNavigator.Navigator>
+      <AddressStackNavigator.Screen
         name="AddressList"
         component={AddressListScreen}
         options={{ title: "Adresses publiques" }}
       />
-      <Stack.Screen
+      <AddressStackNavigator.Screen
         name="AddressDetails"
         component={AddressDetailsScreen}
         options={{ title: "Détails" }}
       />
-      <Stack.Screen
-        name="CreateAddress"
-        component={CreateAddressScreen}
-        options={{ title: "Créer une adresse" }}
-      />
-      <Stack.Screen
+      <AddressStackNavigator.Screen
         name="Reviews"
         component={ReviewScreen}
         options={{ title: "Laisser un avis" }}
       />
-    </Stack.Navigator>
+    </AddressStackNavigator.Navigator>
   );
 }
 
@@ -142,7 +143,24 @@ function AppNavigator() {
     );
   }
 
-  return user ? <MainTabs /> : <AuthStack />;
+  if (user) {
+    return (
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="MainTabs" component={MainTabs} />
+        <Stack.Screen
+          name="CreateAddress"
+          component={CreateAddressScreen}
+          options={{
+            title: "Créer une adresse",
+            headerShown: true,
+            presentation: "modal",
+          }}
+        />
+      </Stack.Navigator>
+    );
+  }
+
+  return <AuthStack />;
 }
 
 export default function App() {

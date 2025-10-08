@@ -19,19 +19,17 @@ import MapView, { Marker, Region } from "react-native-maps";
 import { useAddressStore } from "../stores/addressStore";
 import { useAuthStore } from "../stores/authStore";
 import { storage } from "../../firebaseConfig";
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { RootStackParamList } from "../types/navigation";
 
 const { width, height } = Dimensions.get("window");
 
-/* TODO : add an image uploader to the screen
-- an adress can have multiple images
-- the images are stored in the firebase storage
-- the images are displayed in the address details screen
-- the images are deleted when the address is deleted
-- the images are deleted when the address is updated
-*/
 const CreateAddressScreen = () => {
   const { createAddress, uploadPhoto } = useAddressStore();
   const { user } = useAuthStore();
+  const navigation =
+    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [isPublic, setIsPublic] = useState(true);
@@ -259,6 +257,25 @@ const CreateAddressScreen = () => {
             setIsPublic(true);
             setSelectedLocation(null);
             setPhotos([]);
+
+            // Navigate to Map tab and close modal
+            navigation.reset({
+              index: 0,
+              routes: [
+                {
+                  name: "MainTabs",
+                  state: {
+                    routes: [
+                      { name: "Addresses" },
+                      { name: "Map" },
+                      { name: "MyAddresses" },
+                      { name: "Profile" },
+                    ],
+                    index: 1, // Map tab index
+                  },
+                },
+              ],
+            });
           },
         },
       ]);

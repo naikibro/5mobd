@@ -8,6 +8,7 @@ interface AddressState {
   loading: boolean;
   error: string | null;
   pollingInterval: NodeJS.Timeout | null;
+  isPolling: boolean;
 
   // Actions
   startPolling: () => void;
@@ -15,6 +16,9 @@ interface AddressState {
   fetchAddresses: () => Promise<void>;
   fetchUserAddresses: (userId: string) => Promise<void>;
   fetchPublicAddresses: () => Promise<void>;
+  silentFetchAddresses: () => Promise<void>;
+  silentFetchUserAddresses: (userId: string) => Promise<void>;
+  silentFetchPublicAddresses: () => Promise<void>;
   createAddress: (
     addressData: Omit<Address, "id" | "createdAt" | "updatedAt">
   ) => Promise<string>;
@@ -43,26 +47,27 @@ export const useAddressStore = create<AddressState>((set, get) => ({
   loading: false,
   error: null,
   pollingInterval: null,
+  isPolling: false,
 
   startPolling: () => {
-    const { stopPolling, fetchAddresses } = get();
+    const { stopPolling, silentFetchAddresses } = get();
 
     // Stop existing polling if any
     stopPolling();
 
     // Start new polling every 5 seconds
     const interval = setInterval(() => {
-      fetchAddresses();
+      silentFetchAddresses();
     }, 5000);
 
-    set({ pollingInterval: interval });
+    set({ pollingInterval: interval, isPolling: true });
   },
 
   stopPolling: () => {
     const { pollingInterval } = get();
     if (pollingInterval) {
       clearInterval(pollingInterval);
-      set({ pollingInterval: null });
+      set({ pollingInterval: null, isPolling: false });
     }
   },
 
@@ -96,6 +101,51 @@ export const useAddressStore = create<AddressState>((set, get) => ({
     } catch (error: any) {
       set({ error: error.message, loading: false });
       throw error;
+    }
+  },
+
+  silentFetchAddresses: async () => {
+    try {
+      const newAddresses = await addressService.getAllAddresses();
+      const { addresses: currentAddresses } = get();
+
+      // Only update if addresses are different
+      if (JSON.stringify(newAddresses) !== JSON.stringify(currentAddresses)) {
+        set({ addresses: newAddresses });
+      }
+    } catch (error: any) {
+      // Silent fail for polling - don't show errors
+      console.warn("Silent fetch failed:", error.message);
+    }
+  },
+
+  silentFetchUserAddresses: async (userId: string) => {
+    try {
+      const newAddresses = await addressService.getAddressesByUser(userId);
+      const { addresses: currentAddresses } = get();
+
+      // Only update if addresses are different
+      if (JSON.stringify(newAddresses) !== JSON.stringify(currentAddresses)) {
+        set({ addresses: newAddresses });
+      }
+    } catch (error: any) {
+      // Silent fail for polling - don't show errors
+      console.warn("Silent fetch failed:", error.message);
+    }
+  },
+
+  silentFetchPublicAddresses: async () => {
+    try {
+      const newAddresses = await addressService.getPublicAddresses();
+      const { addresses: currentAddresses } = get();
+
+      // Only update if addresses are different
+      if (JSON.stringify(newAddresses) !== JSON.stringify(currentAddresses)) {
+        set({ addresses: newAddresses });
+      }
+    } catch (error: any) {
+      // Silent fail for polling - don't show errors
+      console.warn("Silent fetch failed:", error.message);
     }
   },
 
