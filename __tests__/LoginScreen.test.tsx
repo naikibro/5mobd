@@ -2,20 +2,22 @@ import React from "react";
 import { render, fireEvent, waitFor } from "@testing-library/react-native";
 import { Alert } from "react-native";
 import LoginScreen from "../src/screens/LoginScreen";
-import { AuthProvider } from "../src/context/AuthContext";
 import { signInWithEmailAndPassword, onAuthStateChanged } from "firebase/auth";
 
 jest.mock("firebase/auth");
+jest.mock("../src/stores/authStore", () => ({
+  useAuthStore: () => ({
+    signIn: jest.fn(),
+    loading: false,
+    error: null,
+  }),
+}));
 
 const mockNavigation = {
   navigate: jest.fn(),
 };
 
-const MockedLoginScreen = () => (
-  <AuthProvider>
-    <LoginScreen navigation={mockNavigation} />
-  </AuthProvider>
-);
+const MockedLoginScreen = () => <LoginScreen navigation={mockNavigation} />;
 
 describe("LoginScreen", () => {
   beforeEach(() => {

@@ -13,8 +13,7 @@ import {
   Animated,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useAuth } from "../context/AuthContext";
-
+import { useAuthStore } from "../stores/authStore";
 const { width } = Dimensions.get("window");
 
 interface Props {
@@ -24,8 +23,7 @@ interface Props {
 const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const { signIn } = useAuth();
+  const { signIn, loading: authLoading, error } = useAuthStore();
 
   // Animation values for slide-in effect
   const [logoAnim] = useState(new Animated.Value(-100));
@@ -72,13 +70,10 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
       return;
     }
 
-    setLoading(true);
     try {
       await signIn(email, password);
     } catch (error: any) {
       Alert.alert("Erreur de connexion", error.message);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -135,11 +130,11 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
 
         <Animated.View style={{ transform: [{ translateY: buttonAnim }] }}>
           <TouchableOpacity
-            style={[styles.button, loading && styles.buttonDisabled]}
+            style={[styles.button, authLoading && styles.buttonDisabled]}
             onPress={handleLogin}
-            disabled={loading}
+            disabled={authLoading}
           >
-            {loading ? (
+            {authLoading ? (
               <ActivityIndicator color="#fff" />
             ) : (
               <Text style={styles.buttonText}>Se connecter</Text>

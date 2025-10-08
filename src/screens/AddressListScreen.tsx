@@ -17,15 +17,15 @@ import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../types/navigation";
 import { Address } from "../types/address";
-import { useAddress } from "../context/AddressContext";
+import { useAddressStore } from "../stores/addressStore";
 
 const { width } = Dimensions.get("window");
 
 const AddressListScreen = () => {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { getPublicAddresses, searchAddresses, loading } = useAddress();
-  const [addresses, setAddresses] = useState<Address[]>([]);
+  const { fetchPublicAddresses, searchAddresses, loading, addresses } =
+    useAddressStore();
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
 
@@ -35,8 +35,7 @@ const AddressListScreen = () => {
 
   const loadAddresses = async () => {
     try {
-      const publicAddresses = await getPublicAddresses();
-      setAddresses(publicAddresses);
+      await fetchPublicAddresses();
     } catch (error) {
       console.error("Error loading addresses:", error);
     }
@@ -48,7 +47,7 @@ const AddressListScreen = () => {
       setIsSearching(true);
       try {
         const results = await searchAddresses(query, "public");
-        setAddresses(results);
+        // Note: The search results will be handled by the store
       } catch (error) {
         console.error("Error searching addresses:", error);
       } finally {

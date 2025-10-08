@@ -13,7 +13,7 @@ import {
   Dimensions,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useAuth } from "../context/AuthContext";
+import { useAuthStore } from "../stores/authStore";
 
 const { width } = Dimensions.get("window");
 
@@ -26,8 +26,7 @@ const SignupScreen: React.FC<Props> = ({ navigation }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const { signUp } = useAuth();
+  const { signUp, loading: authLoading } = useAuthStore();
 
   const handleSignup = async () => {
     if (!displayName || !email || !password || !confirmPassword) {
@@ -48,14 +47,11 @@ const SignupScreen: React.FC<Props> = ({ navigation }) => {
       return;
     }
 
-    setLoading(true);
     try {
       await signUp(email, password, displayName);
       Alert.alert("Succès", "Votre compte a été créé avec succès !");
     } catch (error: any) {
       Alert.alert("Erreur d'inscription", error.message);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -109,11 +105,11 @@ const SignupScreen: React.FC<Props> = ({ navigation }) => {
           />
 
           <TouchableOpacity
-            style={[styles.button, loading && styles.buttonDisabled]}
+            style={[styles.button, authLoading && styles.buttonDisabled]}
             onPress={handleSignup}
-            disabled={loading}
+            disabled={authLoading}
           >
-            {loading ? (
+            {authLoading ? (
               <ActivityIndicator color="#fff" />
             ) : (
               <Text style={styles.buttonText}>S'inscrire</Text>

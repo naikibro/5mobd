@@ -12,7 +12,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import * as ImageManipulator from "expo-image-manipulator";
-import { useAddress } from "../context/AddressContext";
+import { useAddressStore } from "../stores/addressStore";
 
 interface ProfilePhotoPickerProps {
   currentPhotoUrl?: string;
@@ -26,7 +26,7 @@ const ProfilePhotoPicker: React.FC<ProfilePhotoPickerProps> = ({
   userId,
 }) => {
   const [uploading, setUploading] = useState(false);
-  const { uploadPhoto } = useAddress();
+  const { uploadPhoto } = useAddressStore();
 
   const requestPermissions = async () => {
     if (Platform.OS !== "web") {

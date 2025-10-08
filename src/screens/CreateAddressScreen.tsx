@@ -16,8 +16,8 @@ import {
   View,
 } from "react-native";
 import MapView, { Marker, Region } from "react-native-maps";
-import { useAddress } from "../context/AddressContext";
-import { useAuth } from "../context/AuthContext";
+import { useAddressStore } from "../stores/addressStore";
+import { useAuthStore } from "../stores/authStore";
 import { storage } from "../../firebaseConfig";
 
 const { width, height } = Dimensions.get("window");
@@ -30,8 +30,8 @@ const { width, height } = Dimensions.get("window");
 - the images are deleted when the address is updated
 */
 const CreateAddressScreen = () => {
-  const { createAddress, uploadPhoto } = useAddress();
-  const { user } = useAuth();
+  const { createAddress, uploadPhoto } = useAddressStore();
+  const { user } = useAuthStore();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [isPublic, setIsPublic] = useState(true);

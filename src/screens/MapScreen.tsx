@@ -12,20 +12,20 @@ import {
 import MapView, { Marker, Region } from "react-native-maps";
 import * as Location from "expo-location";
 import { Ionicons } from "@expo/vector-icons";
-import { useAddress } from "../context/AddressContext";
-import { useAuth } from "../context/AuthContext";
-import { AddressWithReviews } from "../types/address";
+import { useAddressStore } from "../stores/addressStore";
+import { useAuthStore } from "../stores/authStore";
+import { Address, AddressWithReviews } from "../types/address";
 import AddressDetailsModal from "../components/AddressDetailsModal";
 
 const { width, height } = Dimensions.get("window");
 
 const MapScreen = () => {
-  const { getPublicAddresses, getAddressWithReviews } = useAddress();
-  const { user } = useAuth();
+  const { fetchPublicAddresses, getAddressWithReviews, addresses } =
+    useAddressStore();
+  const { user } = useAuthStore();
   const [location, setLocation] = useState<Location.LocationObject | null>(
     null
   );
-  const [addresses, setAddresses] = useState<AddressWithReviews[]>([]);
   const [loading, setLoading] = useState(true);
   const [permissionStatus, setPermissionStatus] = useState<string>("");
   const [selectedAddress, setSelectedAddress] =
@@ -90,8 +90,8 @@ const MapScreen = () => {
 
   const loadAddresses = async () => {
     try {
-      const publicAddresses = await getPublicAddresses();
-      setAddresses(publicAddresses as AddressWithReviews[]);
+      await fetchPublicAddresses();
+      // Note: Addresses will be available from the store
     } catch (error) {
       console.error("Error loading addresses:", error);
     }
@@ -108,7 +108,7 @@ const MapScreen = () => {
     }
   };
 
-  const handleMarkerPress = async (address: AddressWithReviews) => {
+  const handleMarkerPress = async (address: Address) => {
     try {
       setLoading(true);
       const addressWithReviews = await getAddressWithReviews(address.id);
@@ -119,7 +119,7 @@ const MapScreen = () => {
     } catch (error) {
       console.error("Error fetching address details:", error);
       // Fallback to basic address if fetch fails
-      setSelectedAddress(address);
+      setSelectedAddress(address as AddressWithReviews);
       setModalVisible(true);
     } finally {
       setLoading(false);
@@ -129,6 +129,19 @@ const MapScreen = () => {
   const closeModal = () => {
     setModalVisible(false);
     setSelectedAddress(null);
+  };
+
+  const handleReviewAdded = async () => {
+    if (selectedAddress) {
+      try {
+        const updatedAddress = await getAddressWithReviews(selectedAddress.id);
+        if (updatedAddress) {
+          setSelectedAddress(updatedAddress);
+        }
+      } catch (error) {
+        console.error("Error refreshing address after review:", error);
+      }
+    }
   };
 
   const renderMarkers = () => {
@@ -214,6 +227,7 @@ const MapScreen = () => {
         address={selectedAddress}
         onClose={closeModal}
         loading={loading}
+        onReviewAdded={handleReviewAdded}
       />
     </View>
   );

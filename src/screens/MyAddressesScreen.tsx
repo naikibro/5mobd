@@ -12,17 +12,21 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useAddress } from "../context/AddressContext";
-import { useAuth } from "../context/AuthContext";
+import { useAddressStore } from "../stores/addressStore";
+import { useAuthStore } from "../stores/authStore";
 import { Address } from "../types/address";
 
 const { width } = Dimensions.get("window");
 
 const MyAddressesScreen = () => {
-  const { getAddressesByUser, deleteAddress, searchAddresses, loading } =
-    useAddress();
-  const { user } = useAuth();
-  const [addresses, setAddresses] = useState<Address[]>([]);
+  const {
+    fetchUserAddresses,
+    deleteAddress,
+    searchAddresses,
+    loading,
+    addresses,
+  } = useAddressStore();
+  const { user } = useAuthStore();
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [filter, setFilter] = useState<"all" | "public" | "private">("all");
@@ -37,8 +41,7 @@ const MyAddressesScreen = () => {
     if (!user) return;
 
     try {
-      const myAddresses = await getAddressesByUser(user.uid);
-      setAddresses(myAddresses);
+      await fetchUserAddresses(user.uid);
     } catch (error) {
       console.error("Error loading my addresses:", error);
     }
@@ -49,8 +52,8 @@ const MyAddressesScreen = () => {
     if (query.trim()) {
       setIsSearching(true);
       try {
-        const results = await searchAddresses(query, filter);
-        setAddresses(results);
+        const results = await searchAddresses(query, filter, user?.uid);
+        // Note: The search results will be handled by the store
       } catch (error) {
         console.error("Error searching addresses:", error);
       } finally {
@@ -82,7 +85,6 @@ const MyAddressesScreen = () => {
           onPress: async () => {
             try {
               await deleteAddress(address.id);
-              await loadMyAddresses();
               Alert.alert("Succès", "Adresse supprimée avec succès");
             } catch (error: any) {
               Alert.alert("Erreur", error.message);

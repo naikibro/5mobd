@@ -14,8 +14,8 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { RouteProp, useRoute } from "@react-navigation/native";
 import { RootStackParamList } from "../types/navigation";
-import { useAddress } from "../context/AddressContext";
-import { useAuth } from "../context/AuthContext";
+import { useAddressStore } from "../stores/addressStore";
+import { useAuthStore } from "../stores/authStore";
 
 const { width } = Dimensions.get("window");
 
@@ -24,8 +24,8 @@ type ReviewScreenRouteProp = RouteProp<RootStackParamList, "Reviews">;
 const ReviewScreen = () => {
   const route = useRoute<ReviewScreenRouteProp>();
   const { address } = route.params;
-  const { createReview } = useAddress();
-  const { user } = useAuth();
+  const { createReview } = useAddressStore();
+  const { user } = useAuthStore();
 
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
@@ -55,6 +55,7 @@ const ReviewScreen = () => {
         comment: comment.trim(),
         userId: user.uid,
         userDisplayName: user.displayName || "Utilisateur",
+        userPhotoURL: user.photoURL || undefined,
         photos: [],
       });
 

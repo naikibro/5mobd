@@ -14,8 +14,8 @@ import LoginScreen from "./src/screens/LoginScreen";
 import SignupScreen from "./src/screens/SignupScreen";
 import ProfileScreen from "./src/screens/ProfileScreen";
 import SplashScreen from "./src/screens/SplashScreen";
-import { AddressProvider } from "./src/context/AddressContext";
-import { AuthProvider, useAuth } from "./src/context/AuthContext";
+import { useAuthStore } from "./src/stores/authStore";
+import { useAddressStore } from "./src/stores/addressStore";
 import { RootStackParamList, MainTabParamList } from "./src/types/navigation";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -107,8 +107,28 @@ function AuthStack() {
 }
 
 function AppNavigator() {
-  const { user, loading } = useAuth();
+  const { user, loading, initialize } = useAuthStore();
+  const { startPolling, stopPolling } = useAddressStore();
   const [showSplash, setShowSplash] = useState(true);
+
+  useEffect(() => {
+    // Initialize auth state listener
+    const unsubscribe = initialize();
+
+    return () => {
+      unsubscribe();
+      stopPolling();
+    };
+  }, [initialize, stopPolling]);
+
+  useEffect(() => {
+    // Start polling when user is authenticated
+    if (user) {
+      startPolling();
+    } else {
+      stopPolling();
+    }
+  }, [user, startPolling, stopPolling]);
 
   if (showSplash) {
     return <SplashScreen onFinish={() => setShowSplash(false)} />;
@@ -127,12 +147,8 @@ function AppNavigator() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <AddressProvider>
-        <NavigationContainer>
-          <AppNavigator />
-        </NavigationContainer>
-      </AddressProvider>
-    </AuthProvider>
+    <NavigationContainer>
+      <AppNavigator />
+    </NavigationContainer>
   );
 }

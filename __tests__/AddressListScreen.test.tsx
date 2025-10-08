@@ -4,29 +4,31 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import AddressListScreen from "../src/screens/AddressListScreen";
 import AddressDetailsScreen from "../src/screens/AddressDetailsScreen";
-import { AddressProvider } from "../src/context/AddressContext";
-import { AuthProvider } from "../src/context/AuthContext";
 import { getDocs } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 
 jest.mock("firebase/firestore");
 jest.mock("firebase/auth");
+jest.mock("../src/stores/addressStore", () => ({
+  useAddressStore: () => ({
+    fetchPublicAddresses: jest.fn(),
+    searchAddresses: jest.fn(),
+    loading: false,
+    addresses: [],
+  }),
+}));
 
 const Stack = createNativeStackNavigator();
 
 const MockedNavigator = () => (
   <NavigationContainer>
-    <AuthProvider>
-      <AddressProvider>
-        <Stack.Navigator>
-          <Stack.Screen name="AddressList" component={AddressListScreen} />
-          <Stack.Screen
-            name="AddressDetails"
-            component={AddressDetailsScreen as any}
-          />
-        </Stack.Navigator>
-      </AddressProvider>
-    </AuthProvider>
+    <Stack.Navigator>
+      <Stack.Screen name="AddressList" component={AddressListScreen} />
+      <Stack.Screen
+        name="AddressDetails"
+        component={AddressDetailsScreen as any}
+      />
+    </Stack.Navigator>
   </NavigationContainer>
 );
 
@@ -40,7 +42,6 @@ describe("AddressListScreen", () => {
   });
 
   it("should display empty state when no addresses", async () => {
-    // Since getPublicAddresses doesn't set loading state, we'll test the empty state instead
     (getDocs as jest.Mock).mockResolvedValue({
       docs: [],
     });

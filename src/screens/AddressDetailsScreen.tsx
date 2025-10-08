@@ -13,8 +13,8 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useAddress } from "../context/AddressContext";
-import { useAuth } from "../context/AuthContext";
+import { useAddressStore } from "../stores/addressStore";
+import { useAuthStore } from "../stores/authStore";
 import { RootStackParamList } from "../types/navigation";
 
 const { width } = Dimensions.get("window");
@@ -32,8 +32,8 @@ const AddressDetailsScreen: React.FC<Props> = ({ route }) => {
   const { address } = route.params;
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { deleteAddress, getAddressWithReviews } = useAddress();
-  const { user } = useAuth();
+  const { deleteAddress, getAddressWithReviews } = useAddressStore();
+  const { user } = useAuthStore();
   const [addressWithReviews, setAddressWithReviews] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 

@@ -15,7 +15,7 @@ import { Ionicons } from "@expo/vector-icons";
 import ProfilePhotoPicker from "../components/ProfilePhotoPicker";
 
 const { width } = Dimensions.get("window");
-import { useAuth } from "../context/AuthContext";
+import { useAuthStore } from "../stores/authStore";
 
 const ProfileScreen = () => {
   const {
@@ -26,7 +26,7 @@ const ProfileScreen = () => {
     updateUserEmail,
     updateUserPassword,
     updateUserPhoto,
-  } = useAuth();
+  } = useAuthStore();
   const [displayName, setDisplayName] = useState(user?.displayName || "");
   const [email, setEmail] = useState(user?.email || "");
   const [newPassword, setNewPassword] = useState("");

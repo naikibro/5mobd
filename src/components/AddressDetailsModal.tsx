@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -9,9 +9,13 @@ import {
   Image,
   Dimensions,
   ActivityIndicator,
+  TextInput,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { AddressWithReviews } from "../types/address";
+import { useAuthStore } from "../stores/authStore";
+import { useAddressStore } from "../stores/addressStore";
 
 const { width, height } = Dimensions.get("window");
 
@@ -20,6 +24,7 @@ interface AddressDetailsModalProps {
   address: AddressWithReviews | null;
   onClose: () => void;
   loading?: boolean;
+  onReviewAdded?: () => void;
 }
 
 const AddressDetailsModal: React.FC<AddressDetailsModalProps> = ({
@@ -27,28 +32,103 @@ const AddressDetailsModal: React.FC<AddressDetailsModalProps> = ({
   address,
   onClose,
   loading = false,
+  onReviewAdded,
 }) => {
+  const { user, userProfile } = useAuthStore();
+  const { createReview } = useAddressStore();
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [rating, setRating] = useState(0);
+  const [comment, setComment] = useState("");
+  const [submittingReview, setSubmittingReview] = useState(false);
+
   if (!address) return null;
+
+  const canAddReview = user && address.userId !== user.uid;
+
+  const handleSubmitReview = async () => {
+    if (rating === 0) {
+      Alert.alert("Erreur", "Veuillez sélectionner une note");
+      return;
+    }
+
+    if (!comment.trim()) {
+      Alert.alert("Erreur", "Veuillez ajouter un commentaire");
+      return;
+    }
+
+    setSubmittingReview(true);
+    try {
+      await createReview({
+        addressId: address.id,
+        rating,
+        comment: comment.trim(),
+        userId: user!.uid,
+        userDisplayName: user!.displayName || "Utilisateur",
+        userPhotoURL: user!.photoURL || undefined,
+        photos: [],
+      });
+
+      Alert.alert("Succès", "Votre avis a été ajouté avec succès", [
+        {
+          text: "OK",
+          onPress: () => {
+            setShowReviewModal(false);
+            setRating(0);
+            setComment("");
+            onReviewAdded?.();
+          },
+        },
+      ]);
+    } catch (error) {
+      Alert.alert("Erreur", "Impossible d'ajouter votre avis");
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
+
+  const renderStars = () => {
+    const stars = [];
+    for (let i = 1; i <= 5; i++) {
+      stars.push(
+        <TouchableOpacity
+          key={i}
+          onPress={() => setRating(i)}
+          style={styles.starButton}
+        >
+          <Ionicons
+            name={i <= rating ? "star" : "star-outline"}
+            size={32}
+            color={i <= rating ? "#f39c12" : "#bdc3c7"}
+          />
+        </TouchableOpacity>
+      );
+    }
+    return stars;
+  };
 
   const renderPhotos = () => {
     if (!address.photos || address.photos.length === 0) {
-      return (
-        <View style={styles.noPhotosContainer}>
-          <Ionicons name="image-outline" size={40} color="#bdc3c7" />
-          <Text style={styles.noPhotosText}>Aucune photo</Text>
-        </View>
-      );
+      return <></>;
     }
 
     return (
-      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        pagingEnabled
+        decelerationRate="fast"
+        snapToInterval={width - 32}
+        snapToAlignment="center"
+        contentContainerStyle={styles.carouselContainer}
+      >
         {address.photos.map((photo, index) => (
-          <Image
-            key={index}
-            source={{ uri: photo }}
-            style={styles.photo}
-            resizeMode="cover"
-          />
+          <View key={index} style={styles.carouselItem}>
+            <Image
+              source={{ uri: photo }}
+              style={styles.carouselPhoto}
+              resizeMode="cover"
+            />
+          </View>
         ))}
       </ScrollView>
     );
@@ -77,6 +157,15 @@ const AddressDetailsModal: React.FC<AddressDetailsModalProps> = ({
               <Text style={styles.privacyText}>
                 {address.isPublic ? "Public" : "Privé"}
               </Text>
+              {user?.uid === address.userId && user?.photoURL && (
+                <>
+                  <Text style={styles.separator}>•</Text>
+                  <Image
+                    source={{ uri: user.photoURL }}
+                    style={styles.userPhoto}
+                  />
+                </>
+              )}
               {address.reviewCount > 0 && (
                 <>
                   <Text style={styles.separator}>•</Text>
@@ -91,6 +180,7 @@ const AddressDetailsModal: React.FC<AddressDetailsModalProps> = ({
         </View>
 
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+          <View style={styles.section}>{renderPhotos()}</View>
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Description</Text>
             <Text style={styles.description}>{address.description}</Text>
@@ -107,12 +197,18 @@ const AddressDetailsModal: React.FC<AddressDetailsModalProps> = ({
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Photos</Text>
-            {renderPhotos()}
-          </View>
-
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Avis</Text>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Avis</Text>
+              {canAddReview && (
+                <TouchableOpacity
+                  style={styles.addReviewButton}
+                  onPress={() => setShowReviewModal(true)}
+                >
+                  <Ionicons name="add" size={20} color="#2ecc71" />
+                  <Text style={styles.addReviewText}>Ajouter un avis</Text>
+                </TouchableOpacity>
+              )}
+            </View>
             <View style={styles.reviewsContainer}>
               {loading ? (
                 <View style={styles.loadingContainer}>
@@ -123,13 +219,23 @@ const AddressDetailsModal: React.FC<AddressDetailsModalProps> = ({
                 address.reviews.map((review, index) => (
                   <View key={index} style={styles.reviewItem}>
                     <View style={styles.reviewHeader}>
-                      <Text style={styles.reviewRating}>
-                        {"★".repeat(review.rating)}
-                        {"☆".repeat(5 - review.rating)}
-                      </Text>
-                      <Text style={styles.reviewDate}>
-                        {new Date(review.createdAt).toLocaleDateString()}
-                      </Text>
+                      <View style={styles.reviewUserInfo}>
+                        {review.userPhotoURL && (
+                          <Image
+                            source={{ uri: review.userPhotoURL }}
+                            style={styles.reviewerPhoto}
+                          />
+                        )}
+                        <View style={styles.reviewRatingAndDate}>
+                          <Text style={styles.reviewRating}>
+                            {"★".repeat(review.rating)}
+                            {"☆".repeat(5 - review.rating)}
+                          </Text>
+                          <Text style={styles.reviewDate}>
+                            {new Date(review.createdAt).toLocaleDateString()}
+                          </Text>
+                        </View>
+                      </View>
                     </View>
                     <Text style={styles.reviewComment}>{review.comment}</Text>
                   </View>
@@ -143,6 +249,60 @@ const AddressDetailsModal: React.FC<AddressDetailsModalProps> = ({
           </View>
         </ScrollView>
       </View>
+
+      {/* Review Modal */}
+      <Modal
+        visible={showReviewModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowReviewModal(false)}
+      >
+        <View style={styles.reviewModalContainer}>
+          <View style={styles.reviewModalHeader}>
+            <TouchableOpacity
+              style={styles.reviewModalCloseButton}
+              onPress={() => setShowReviewModal(false)}
+            >
+              <Ionicons name="close" size={24} color="#333" />
+            </TouchableOpacity>
+            <Text style={styles.reviewModalTitle}>Ajouter un avis</Text>
+            <View style={styles.placeholder} />
+          </View>
+
+          <ScrollView style={styles.reviewModalContent}>
+            <View style={styles.reviewForm}>
+              <Text style={styles.reviewFormLabel}>Note</Text>
+              <View style={styles.starsContainer}>{renderStars()}</View>
+
+              <Text style={styles.reviewFormLabel}>Commentaire</Text>
+              <TextInput
+                style={styles.commentInput}
+                placeholder="Partagez votre expérience..."
+                value={comment}
+                onChangeText={setComment}
+                multiline
+                numberOfLines={4}
+                textAlignVertical="top"
+              />
+
+              <TouchableOpacity
+                style={[
+                  styles.submitButton,
+                  submittingReview && styles.submitButtonDisabled,
+                ]}
+                onPress={handleSubmitReview}
+                disabled={submittingReview}
+              >
+                {submittingReview ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={styles.submitButtonText}>Publier l'avis</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
+        </View>
+      </Modal>
     </Modal>
   );
 };
@@ -193,6 +353,12 @@ const styles = StyleSheet.create({
     color: "#ffa500",
     fontWeight: "500",
   },
+  userPhoto: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    marginLeft: 4,
+  },
   content: {
     flex: 1,
     paddingHorizontal: 16,
@@ -239,6 +405,19 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginRight: 8,
   },
+  carouselContainer: {
+    paddingHorizontal: 16,
+  },
+  carouselItem: {
+    width: width - 32,
+    height: 200,
+    marginRight: 16,
+  },
+  carouselPhoto: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 12,
+  },
   reviewsContainer: {
     marginTop: 8,
   },
@@ -249,10 +428,24 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   reviewHeader: {
+    marginBottom: 4,
+  },
+  reviewUserInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 4,
+  },
+  reviewerPhoto: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    marginRight: 8,
+  },
+  reviewRatingAndDate: {
+    flex: 1,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 4,
   },
   reviewRating: {
     fontSize: 16,
@@ -282,6 +475,100 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#666",
     marginLeft: 8,
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  addReviewButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f8f9fa",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "#2ecc71",
+  },
+  addReviewText: {
+    fontSize: 14,
+    color: "#2ecc71",
+    marginLeft: 4,
+    fontWeight: "500",
+  },
+  starButton: {
+    padding: 4,
+  },
+  reviewModalContainer: {
+    flex: 1,
+    backgroundColor: "#fff",
+  },
+  reviewModalHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: "#e0e0e0",
+  },
+  reviewModalCloseButton: {
+    padding: 8,
+  },
+  reviewModalTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#333",
+  },
+  placeholder: {
+    width: 40,
+  },
+  reviewModalContent: {
+    flex: 1,
+    paddingHorizontal: 16,
+  },
+  reviewForm: {
+    paddingVertical: 20,
+  },
+  reviewFormLabel: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#333",
+    marginBottom: 12,
+    marginTop: 16,
+  },
+  starsContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    marginBottom: 8,
+  },
+  commentInput: {
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    minHeight: 100,
+    backgroundColor: "#f8f9fa",
+  },
+  submitButton: {
+    backgroundColor: "#2ecc71",
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    alignItems: "center",
+    marginTop: 24,
+  },
+  submitButtonDisabled: {
+    backgroundColor: "#bdc3c7",
+  },
+  submitButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
   },
 });
 
