@@ -14,19 +14,23 @@ import * as Location from "expo-location";
 import { Ionicons } from "@expo/vector-icons";
 import { useAddress } from "../context/AddressContext";
 import { useAuth } from "../context/AuthContext";
-import { Address } from "../types/address";
+import { AddressWithReviews } from "../types/address";
+import AddressDetailsModal from "../components/AddressDetailsModal";
 
 const { width, height } = Dimensions.get("window");
 
 const MapScreen = () => {
-  const { getPublicAddresses } = useAddress();
+  const { getPublicAddresses, getAddressWithReviews } = useAddress();
   const { user } = useAuth();
   const [location, setLocation] = useState<Location.LocationObject | null>(
     null
   );
-  const [addresses, setAddresses] = useState<Address[]>([]);
+  const [addresses, setAddresses] = useState<AddressWithReviews[]>([]);
   const [loading, setLoading] = useState(true);
   const [permissionStatus, setPermissionStatus] = useState<string>("");
+  const [selectedAddress, setSelectedAddress] =
+    useState<AddressWithReviews | null>(null);
+  const [modalVisible, setModalVisible] = useState(false);
   const mapRef = useRef<MapView>(null);
 
   const initialRegion: Region = {
@@ -87,7 +91,7 @@ const MapScreen = () => {
   const loadAddresses = async () => {
     try {
       const publicAddresses = await getPublicAddresses();
-      setAddresses(publicAddresses);
+      setAddresses(publicAddresses as AddressWithReviews[]);
     } catch (error) {
       console.error("Error loading addresses:", error);
     }
@@ -104,6 +108,29 @@ const MapScreen = () => {
     }
   };
 
+  const handleMarkerPress = async (address: AddressWithReviews) => {
+    try {
+      setLoading(true);
+      const addressWithReviews = await getAddressWithReviews(address.id);
+      if (addressWithReviews) {
+        setSelectedAddress(addressWithReviews);
+        setModalVisible(true);
+      }
+    } catch (error) {
+      console.error("Error fetching address details:", error);
+      // Fallback to basic address if fetch fails
+      setSelectedAddress(address);
+      setModalVisible(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const closeModal = () => {
+    setModalVisible(false);
+    setSelectedAddress(null);
+  };
+
   const renderMarkers = () => {
     return addresses.map((address) => (
       <Marker
@@ -115,6 +142,7 @@ const MapScreen = () => {
         title={address.name}
         description={address.description}
         pinColor={address.isPublic ? "#2ecc71" : "#e74c3c"}
+        onPress={() => handleMarkerPress(address)}
       />
     ));
   };
@@ -180,6 +208,13 @@ const MapScreen = () => {
           <Text style={styles.legendText}>Adresses privées</Text>
         </View>
       </View>
+
+      <AddressDetailsModal
+        visible={modalVisible}
+        address={selectedAddress}
+        onClose={closeModal}
+        loading={loading}
+      />
     </View>
   );
 };

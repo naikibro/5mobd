@@ -9,6 +9,8 @@ import {
   Platform,
   Dimensions,
   TextInput,
+  Image,
+  ScrollView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
@@ -57,6 +59,41 @@ const AddressListScreen = () => {
     }
   };
 
+  const renderPhotos = (photos: string[]) => {
+    if (!photos || photos.length === 0) {
+      return (
+        <View style={styles.noPhotosContainer}>
+          <Ionicons name="image-outline" size={24} color="#bdc3c7" />
+        </View>
+      );
+    }
+
+    if (photos.length === 1) {
+      return (
+        <Image
+          source={{ uri: photos[0] }}
+          style={styles.singlePhoto}
+          resizeMode="cover"
+        />
+      );
+    }
+
+    // Multiple photos - show first photo with overlay count
+    return (
+      <View style={styles.multiplePhotosContainer}>
+        <Image
+          source={{ uri: photos[0] }}
+          style={styles.multiplePhotosMain}
+          resizeMode="cover"
+        />
+        <View style={styles.photoCountOverlay}>
+          <Ionicons name="images" size={16} color="#fff" />
+          <Text style={styles.photoCountText}>{photos.length}</Text>
+        </View>
+      </View>
+    );
+  };
+
   const renderAddress = ({ item }: { item: Address }) => (
     <TouchableOpacity
       style={styles.item}
@@ -83,6 +120,9 @@ const AddressListScreen = () => {
           />
         </View>
       </View>
+      {item.photos && item.photos.length > 0 && (
+        <View style={styles.photosContainer}>{renderPhotos(item.photos)}</View>
+      )}
     </TouchableOpacity>
   );
 
@@ -284,6 +324,50 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
+  },
+  photosContainer: {
+    marginTop: 12,
+    borderRadius: 8,
+    overflow: "hidden",
+  },
+  noPhotosContainer: {
+    height: 120,
+    backgroundColor: "#f8f9fa",
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 8,
+  },
+  singlePhoto: {
+    height: 120,
+    width: "100%",
+    borderRadius: 8,
+  },
+  multiplePhotosContainer: {
+    position: "relative",
+    height: 120,
+    borderRadius: 8,
+    overflow: "hidden",
+  },
+  multiplePhotosMain: {
+    height: 120,
+    width: "100%",
+  },
+  photoCountOverlay: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
+    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  photoCountText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "600",
+    marginLeft: 4,
   },
 });
 

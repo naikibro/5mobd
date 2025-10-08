@@ -1,26 +1,36 @@
-import React, { useState, useEffect } from "react";
+import { Ionicons } from "@expo/vector-icons";
+import * as ImageManipulator from "expo-image-manipulator";
+import * as ImagePicker from "expo-image-picker";
+import * as Location from "expo-location";
+import React, { useEffect, useState } from "react";
 import {
-  View,
+  ActivityIndicator,
+  Alert,
+  Dimensions,
+  Image,
+  ScrollView,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
-  Alert,
-  ScrollView,
-  Platform,
-  Dimensions,
-  ActivityIndicator,
+  View,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
 import MapView, { Marker, Region } from "react-native-maps";
-import * as Location from "expo-location";
 import { useAddress } from "../context/AddressContext";
 import { useAuth } from "../context/AuthContext";
+import { storage } from "../../firebaseConfig";
 
 const { width, height } = Dimensions.get("window");
 
+/* TODO : add an image uploader to the screen
+- an adress can have multiple images
+- the images are stored in the firebase storage
+- the images are displayed in the address details screen
+- the images are deleted when the address is deleted
+- the images are deleted when the address is updated
+*/
 const CreateAddressScreen = () => {
-  const { createAddress } = useAddress();
+  const { createAddress, uploadPhoto } = useAddress();
   const { user } = useAuth();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -39,6 +49,8 @@ const CreateAddressScreen = () => {
     latitudeDelta: 0.0922,
     longitudeDelta: 0.0421,
   });
+  const [photos, setPhotos] = useState<string[]>([]);
+  const [uploadingPhotos, setUploadingPhotos] = useState(false);
 
   useEffect(() => {
     getCurrentLocation();
@@ -63,14 +75,150 @@ const CreateAddressScreen = () => {
           longitudeDelta: 0.01,
         });
       }
-    } catch (error) {
-      console.error("Error getting current location:", error);
-    }
+    } catch (error) {}
   };
 
   const handleMapPress = (event: any) => {
     const { latitude, longitude } = event.nativeEvent.coordinate;
     setSelectedLocation({ latitude, longitude });
+  };
+
+  const pickImage = async () => {
+    try {
+      const { status } =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert(
+          "Permission requise",
+          "Permission d'accès à la galerie requise"
+        );
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        await processAndUploadImage(result.assets[0]);
+      }
+    } catch (error) {
+      Alert.alert("Erreur", "Impossible de sélectionner l'image");
+    }
+  };
+
+  const takePhoto = async () => {
+    try {
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert(
+          "Permission requise",
+          "Permission d'accès à la caméra requise"
+        );
+        return;
+      }
+
+      const result = await ImagePicker.launchCameraAsync({
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        await processAndUploadImage(result.assets[0]);
+      }
+    } catch (error) {
+      Alert.alert("Erreur", "Impossible de prendre la photo");
+    }
+  };
+
+  const testStorageConnection = async () => {
+    try {
+      // Try to get storage metadata first
+      try {
+        const { getMetadata, listAll, ref } = await import("firebase/storage");
+
+        // Try to list files in the root to test bucket access
+        try {
+          const rootRef = ref(storage, "");
+          await listAll(rootRef);
+        } catch (listError) {
+          // Don't return false here, continue with upload test
+        }
+      } catch (importError) {
+        return false;
+      }
+
+      // Create a simple test file
+      const testContent = "test";
+      const testBlob = new Blob([testContent], { type: "text/plain" });
+      const testPath = `test/${user?.uid}/connection-test.txt`;
+
+      const downloadURL = await uploadPhoto(testBlob, testPath);
+
+      return true;
+    } catch (error) {
+      return false;
+    }
+  };
+
+  const processAndUploadImage = async (asset: ImagePicker.ImagePickerAsset) => {
+    try {
+      setUploadingPhotos(true);
+
+      // Test storage connection first
+      const connectionOk = await testStorageConnection();
+      if (!connectionOk) {
+        throw new Error("Storage connection test failed");
+      }
+
+      // Resize and compress the image
+      const manipulatedImage = await ImageManipulator.manipulateAsync(
+        asset.uri,
+        [{ resize: { width: 800 } }],
+        { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG }
+      );
+
+      // Generate unique filename
+      const timestamp = Date.now();
+      const filename = `address_${timestamp}_${Math.random()
+        .toString(36)
+        .substr(2, 9)}.jpg`;
+      const path = `addresses/${user?.uid}/${filename}`;
+
+      // Upload to Firebase Storage
+      const response = await fetch(manipulatedImage.uri);
+      const blob = await response.blob();
+
+      const downloadURL = await uploadPhoto(blob, path);
+
+      // Add to photos array
+      setPhotos((prev) => [...prev, downloadURL]);
+    } catch (error) {
+      Alert.alert(
+        "Erreur",
+        `Impossible de traiter l'image: ${
+          (error as any)?.message || "Erreur inconnue"
+        }`
+      );
+    } finally {
+      setUploadingPhotos(false);
+    }
+  };
+
+  const removePhoto = (index: number) => {
+    setPhotos((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const showImagePicker = () => {
+    Alert.alert("Ajouter une photo", "Choisissez une option", [
+      { text: "Annuler", style: "cancel" },
+      { text: "Galerie", onPress: pickImage },
+      { text: "Caméra", onPress: takePhoto },
+    ]);
   };
 
   const handleSubmit = async () => {
@@ -98,7 +246,7 @@ const CreateAddressScreen = () => {
         longitude: selectedLocation.longitude,
         isPublic,
         userId: user.uid,
-        photos: [],
+        photos: photos,
       });
 
       Alert.alert("Succès", "Adresse créée avec succès", [
@@ -110,11 +258,11 @@ const CreateAddressScreen = () => {
             setDescription("");
             setIsPublic(true);
             setSelectedLocation(null);
+            setPhotos([]);
           },
         },
       ]);
     } catch (error) {
-      console.error("Error creating address:", error);
       Alert.alert("Erreur", "Impossible de créer l'adresse");
     } finally {
       setLoading(false);
@@ -198,6 +346,47 @@ const CreateAddressScreen = () => {
               </TouchableOpacity>
             </View>
           </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>
+            <Ionicons name="camera" size={18} color="#333" /> Photos
+          </Text>
+
+          <View style={styles.photosContainer}>
+            {photos.map((photo, index) => (
+              <View key={index} style={styles.photoItem}>
+                <Image source={{ uri: photo }} style={styles.photoPreview} />
+                <TouchableOpacity
+                  style={styles.removePhotoButton}
+                  onPress={() => removePhoto(index)}
+                >
+                  <Ionicons name="close-circle" size={24} color="#e74c3c" />
+                </TouchableOpacity>
+              </View>
+            ))}
+
+            {photos.length < 5 && (
+              <TouchableOpacity
+                style={styles.addPhotoButton}
+                onPress={showImagePicker}
+                disabled={uploadingPhotos}
+              >
+                {uploadingPhotos ? (
+                  <ActivityIndicator size="small" color="#2ecc71" />
+                ) : (
+                  <>
+                    <Ionicons name="camera" size={24} color="#2ecc71" />
+                    <Text style={styles.addPhotoText}>Ajouter</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            )}
+          </View>
+
+          <Text style={styles.photosHint}>
+            Vous pouvez ajouter jusqu'à 5 photos (max 5)
+          </Text>
         </View>
 
         <View style={styles.section}>
@@ -384,6 +573,53 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     marginLeft: 8,
+  },
+  photosContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 12,
+    marginBottom: 12,
+  },
+  photoItem: {
+    position: "relative",
+    width: 80,
+    height: 80,
+  },
+  photoPreview: {
+    width: 80,
+    height: 80,
+    borderRadius: 8,
+    backgroundColor: "#f0f0f0",
+  },
+  removePhotoButton: {
+    position: "absolute",
+    top: -8,
+    right: -8,
+    backgroundColor: "#fff",
+    borderRadius: 12,
+  },
+  addPhotoButton: {
+    width: 80,
+    height: 80,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: "#2ecc71",
+    borderStyle: "dashed",
+    backgroundColor: "#f9f9f9",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  addPhotoText: {
+    fontSize: 12,
+    color: "#2ecc71",
+    fontWeight: "500",
+    marginTop: 4,
+  },
+  photosHint: {
+    fontSize: 12,
+    color: "#666",
+    textAlign: "center",
+    fontStyle: "italic",
   },
 });
 

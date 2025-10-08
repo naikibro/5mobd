@@ -85,35 +85,27 @@ const ProfilePhotoPicker: React.FC<ProfilePhotoPickerProps> = ({
         { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG }
       );
 
-      console.log("Manipulated image URI:", manipulatedImage.uri);
-
       // Create a proper file name and path
       const fileName = `profile_${Date.now()}.jpg`;
       const storagePath = `profile-photos/${userId}/${fileName}`;
 
-      console.log("Storage path:", storagePath);
-
       // For React Native, we need to convert the URI to a blob properly
       const response = await fetch(manipulatedImage.uri);
-      console.log("Fetch response status:", response.status);
 
       if (!response.ok) {
         throw new Error(`Failed to fetch image: ${response.status}`);
       }
 
       const blob = await response.blob();
-      console.log("Blob size:", blob.size, "Blob type:", blob.type);
 
       if (blob.size === 0) {
         throw new Error("Blob is empty");
       }
 
       const downloadURL = await uploadPhoto(blob, storagePath);
-      console.log("Upload successful, download URL:", downloadURL);
+
       onPhotoChange(downloadURL);
     } catch (error: any) {
-      console.error("Detailed error uploading image:", error);
-
       // Check if this might be a simulator issue
       if (
         error.message.includes("unknown error") ||

@@ -307,23 +307,14 @@ export const AddressProvider: React.FC<AddressProviderProps> = ({
   // Photo operations
   const uploadPhoto = async (file: Blob, path: string): Promise<string> => {
     try {
-      console.log("Starting upload to path:", path);
-      console.log("File size:", file.size, "File type:", file.type);
-
       const storageRef = ref(storage, path);
-      console.log("Storage ref created:", storageRef.fullPath);
 
       const snapshot = await uploadBytes(storageRef, file);
-      console.log("Upload bytes completed, snapshot:", snapshot);
 
       const downloadURL = await getDownloadURL(snapshot.ref);
-      console.log("Download URL obtained:", downloadURL);
 
       return downloadURL;
     } catch (err: any) {
-      console.error("Detailed upload error:", err);
-      console.error("Error code:", err.code);
-      console.error("Error message:", err.message);
       setError(err.message);
       throw err;
     }
