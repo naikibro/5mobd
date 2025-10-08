@@ -6,7 +6,6 @@ import {
   ActivityIndicator,
   Dimensions,
   FlatList,
-  Image,
   Platform,
   StyleSheet,
   Text,
@@ -14,6 +13,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import PhotoGallery from "../components/PhotoGallery";
 import { useAddressStore } from "../stores/addressStore";
 import { Address } from "../types/address";
 import { AddressStackParamList } from "../types/navigation";
@@ -32,9 +32,6 @@ const AddressListScreen = () => {
   } = useAddressStore();
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
-  const [imageDimensions, setImageDimensions] = useState<{
-    [key: string]: { width: number; height: number };
-  }>({});
 
   useEffect(() => {
     loadAddresses();
@@ -65,73 +62,14 @@ const AddressListScreen = () => {
     }
   };
 
-  const renderPhotos = (photos: string[]) => {
-    if (!photos || photos.length === 0) {
-      return (
-        <View style={styles.noPhotosContainer}>
-          <Ionicons name="image-outline" size={24} color="#bdc3c7" />
-        </View>
-      );
-    }
-
-    if (photos.length === 1) {
-      const photoUrl = photos[0];
-      const dimensions = imageDimensions[photoUrl];
-
-      return (
-        <View style={styles.singlePhotoContainer}>
-          <Image
-            source={{ uri: photoUrl }}
-            style={[
-              styles.singlePhoto,
-              dimensions && {
-                height: Math.min(
-                  (width > 768 ? (width - 32) * 0.48 : width - 32) *
-                    (dimensions.height / dimensions.width),
-                  300
-                ),
-              },
-            ]}
-            resizeMode="cover"
-            onLoad={(event) => {
-              const { width: imageWidth, height: imageHeight } =
-                event.nativeEvent.source;
-              if (!imageDimensions[photoUrl]) {
-                setImageDimensions((prev) => ({
-                  ...prev,
-                  [photoUrl]: { width: imageWidth, height: imageHeight },
-                }));
-              }
-            }}
-          />
-        </View>
-      );
-    }
-
-    // Multiple photos - show first photo with overlay count
-    return (
-      <View style={styles.multiplePhotosContainer}>
-        <Image
-          source={{ uri: photos[0] }}
-          style={styles.multiplePhotosMain}
-          resizeMode="cover"
-        />
-        <View style={styles.photoCountOverlay}>
-          <Ionicons name="images" size={16} color="#fff" />
-          <Text style={styles.photoCountText}>{photos.length}</Text>
-        </View>
-      </View>
-    );
-  };
-
   const renderAddress = ({ item }: { item: Address }) => (
     <TouchableOpacity
       style={styles.item}
       onPress={() => navigation.navigate("AddressDetails", { address: item })}
     >
-      {item.photos && item.photos.length > 0 && (
-        <View style={styles.photosContainer}>{renderPhotos(item.photos)}</View>
-      )}
+      <View style={styles.photosContainer}>
+        <PhotoGallery photos={item.photos || []} />
+      </View>
       <View style={styles.itemContent}>
         <View style={styles.itemInfo}>
           <Text style={styles.name}>{item.name}</Text>
