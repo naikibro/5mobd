@@ -15,12 +15,12 @@ import {
 } from "react-native";
 import { useAddressStore } from "../stores/addressStore";
 import { useAuthStore } from "../stores/authStore";
-import { RootStackParamList } from "../types/navigation";
+import { AddressStackParamList } from "../types/navigation";
 
 const { width } = Dimensions.get("window");
 
 type AddressDetailsScreenRouteProp = RouteProp<
-  RootStackParamList,
+  AddressStackParamList,
   "AddressDetails"
 >;
 
@@ -31,7 +31,7 @@ interface Props {
 const AddressDetailsScreen: React.FC<Props> = ({ route }) => {
   const { address } = route.params;
   const navigation =
-    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+    useNavigation<NativeStackNavigationProp<AddressStackParamList>>();
   const { deleteAddress, getAddressWithReviews } = useAddressStore();
   const { user } = useAuthStore();
   const [addressWithReviews, setAddressWithReviews] = useState<any>(null);
@@ -55,7 +55,8 @@ const AddressDetailsScreen: React.FC<Props> = ({ route }) => {
   const handleDeleteAddress = () => {
     Alert.alert(
       "Supprimer l'adresse",
-      `Êtes-vous sûr de vouloir supprimer "${address.name}" ?`,
+      `Êtes-vous 
+      sûr de vouloir supprimer "${address.name}" ?`,
       [
         { text: "Annuler", style: "cancel" },
         {
@@ -64,7 +65,21 @@ const AddressDetailsScreen: React.FC<Props> = ({ route }) => {
           onPress: async () => {
             try {
               await deleteAddress(address.id);
-              Alert.alert("Succès", "Adresse supprimée avec succès");
+              Alert.alert("Succès", "Adresse supprimée avec succès", [
+                {
+                  text: "OK",
+                  onPress: () => {
+                    // Navigate back to the appropriate list screen
+                    if (user && user.uid === address.userId) {
+                      // If it's the user's own address, go back to AddressList
+                      navigation.navigate("AddressList");
+                    } else {
+                      // Otherwise, go to AddressList
+                      navigation.navigate("AddressList");
+                    }
+                  },
+                },
+              ]);
             } catch (error: any) {
               Alert.alert("Erreur", error.message);
             }

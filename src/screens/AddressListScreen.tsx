@@ -1,33 +1,40 @@
-import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  FlatList,
-  TouchableOpacity,
-  StyleSheet,
-  ActivityIndicator,
-  Platform,
-  Dimensions,
-  TextInput,
-  Image,
-  ScrollView,
-} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { RootStackParamList } from "../types/navigation";
-import { Address } from "../types/address";
+import React, { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  Dimensions,
+  FlatList,
+  Image,
+  Platform,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { useAddressStore } from "../stores/addressStore";
+import { Address } from "../types/address";
+import { AddressStackParamList } from "../types/navigation";
 
 const { width } = Dimensions.get("window");
 
 const AddressListScreen = () => {
   const navigation =
-    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { fetchPublicAddresses, searchAddresses, loading, addresses } =
-    useAddressStore();
+    useNavigation<NativeStackNavigationProp<AddressStackParamList>>();
+  const {
+    fetchPublicAddresses,
+    searchAddresses,
+    loading,
+    addresses,
+    isPolling,
+  } = useAddressStore();
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
+  const [imageDimensions, setImageDimensions] = useState<{
+    [key: string]: { width: number; height: number };
+  }>({});
 
   useEffect(() => {
     loadAddresses();
@@ -68,12 +75,36 @@ const AddressListScreen = () => {
     }
 
     if (photos.length === 1) {
+      const photoUrl = photos[0];
+      const dimensions = imageDimensions[photoUrl];
+
       return (
-        <Image
-          source={{ uri: photos[0] }}
-          style={styles.singlePhoto}
-          resizeMode="cover"
-        />
+        <View style={styles.singlePhotoContainer}>
+          <Image
+            source={{ uri: photoUrl }}
+            style={[
+              styles.singlePhoto,
+              dimensions && {
+                height: Math.min(
+                  (width > 768 ? (width - 32) * 0.48 : width - 32) *
+                    (dimensions.height / dimensions.width),
+                  300
+                ),
+              },
+            ]}
+            resizeMode="cover"
+            onLoad={(event) => {
+              const { width: imageWidth, height: imageHeight } =
+                event.nativeEvent.source;
+              if (!imageDimensions[photoUrl]) {
+                setImageDimensions((prev) => ({
+                  ...prev,
+                  [photoUrl]: { width: imageWidth, height: imageHeight },
+                }));
+              }
+            }}
+          />
+        </View>
       );
     }
 
@@ -98,6 +129,9 @@ const AddressListScreen = () => {
       style={styles.item}
       onPress={() => navigation.navigate("AddressDetails", { address: item })}
     >
+      {item.photos && item.photos.length > 0 && (
+        <View style={styles.photosContainer}>{renderPhotos(item.photos)}</View>
+      )}
       <View style={styles.itemContent}>
         <View style={styles.itemInfo}>
           <Text style={styles.name}>{item.name}</Text>
@@ -119,13 +153,10 @@ const AddressListScreen = () => {
           />
         </View>
       </View>
-      {item.photos && item.photos.length > 0 && (
-        <View style={styles.photosContainer}>{renderPhotos(item.photos)}</View>
-      )}
     </TouchableOpacity>
   );
 
-  if (loading && addresses.length === 0) {
+  if (loading && !isPolling && addresses.length === 0) {
     return (
       <View style={[styles.container, styles.centered]}>
         <ActivityIndicator size="large" color="#2ecc71" />
@@ -149,7 +180,9 @@ const AddressListScreen = () => {
           value={searchQuery}
           onChangeText={handleSearch}
         />
-        {isSearching && <ActivityIndicator size="small" color="#2ecc71" />}
+        {(isSearching || (loading && !isPolling)) && (
+          <ActivityIndicator size="small" color="#2ecc71" />
+        )}
       </View>
 
       <FlatList
@@ -237,7 +270,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderRadius: 8,
     marginBottom: 12,
-    padding: 16,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
@@ -257,6 +289,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
+    padding: 16,
   },
   itemInfo: {
     flex: 1,
@@ -325,8 +358,6 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   photosContainer: {
-    marginTop: 12,
-    borderRadius: 8,
     overflow: "hidden",
   },
   noPhotosContainer: {
@@ -337,14 +368,20 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   singlePhoto: {
-    height: 120,
     width: "100%",
-    borderRadius: 8,
+    borderTopLeftRadius: 8,
+    borderTopRightRadius: 8,
+    minHeight: 120,
+    maxHeight: 300,
+  },
+  singlePhotoContainer: {
+    width: "100%",
   },
   multiplePhotosContainer: {
     position: "relative",
     height: 120,
-    borderRadius: 8,
+    borderTopLeftRadius: 8,
+    borderTopRightRadius: 8,
     overflow: "hidden",
   },
   multiplePhotosMain: {

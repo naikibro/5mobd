@@ -14,13 +14,15 @@
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
+      "scheme": "5mobd",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Cette application utilise votre localisation pour afficher les adresses sur la carte et vous permettre de créer de nouvelles adresses.",
         "NSLocationAlwaysAndWhenInUseUsageDescription": "Cette application utilise votre localisation pour afficher les adresses sur la carte et vous permettre de créer de nouvelles adresses.",
         "NSPhotoLibraryUsageDescription": "Cette application a besoin d'accéder à votre photothèque pour vous permettre de sélectionner une photo de profil.",
-        "NSCameraUsageDescription": "Cette application a besoin d'accéder à votre appareil photo pour vous permettre de prendre une photo de profil."
+        "NSCameraUsageDescription": "Cette application a besoin d'accéder à votre appareil photo pour vous permettre de prendre une photo de profil.",
+        "ITSAppUsesNonExemptEncryption": false
       },
-      "bundleIdentifier": "com.devlab-admin.x5mobd"
+      "bundleIdentifier": "com.pacificknowledge.pereoonews"
     },
     "android": {
       "adaptiveIcon": {
@@ -34,12 +36,17 @@
         "READ_EXTERNAL_STORAGE",
         "WRITE_EXTERNAL_STORAGE"
       ],
-      "package": "com.devlab_admin.x5mobd"
+      "package": "com.pacificknowledge.pereoonews"
     },
     "web": {
       "favicon": "./assets/favicon.png",
       "bundler": "metro"
     },
-    "plugins": []
+    "plugins": ["expo-dev-client"],
+    "extra": {
+      "eas": {
+        "projectId": "7dc0ea54-ac09-458b-9e6d-1e16a261595e"
+      }
+    }
   }
 }
