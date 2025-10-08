@@ -16,6 +16,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { AddressWithReviews } from "../types/address";
 import { useAuthStore } from "../stores/authStore";
 import { useAddressStore } from "../stores/addressStore";
+import FullsizeImageCarousel from "./FullsizeImageCarousel";
 
 const { width, height } = Dimensions.get("window");
 
@@ -107,30 +108,12 @@ const AddressDetailsModal: React.FC<AddressDetailsModalProps> = ({
   };
 
   const renderPhotos = () => {
-    if (!address.photos || address.photos.length === 0) {
-      return <></>;
-    }
-
     return (
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        pagingEnabled
-        decelerationRate="fast"
-        snapToInterval={width - 32}
-        snapToAlignment="center"
-        contentContainerStyle={styles.carouselContainer}
-      >
-        {address.photos.map((photo, index) => (
-          <View key={index} style={styles.carouselItem}>
-            <Image
-              source={{ uri: photo }}
-              style={styles.carouselPhoto}
-              resizeMode="cover"
-            />
-          </View>
-        ))}
-      </ScrollView>
+      <FullsizeImageCarousel
+        photos={address.photos || []}
+        isLoading={false}
+        error={false}
+      />
     );
   };
 
@@ -180,71 +163,75 @@ const AddressDetailsModal: React.FC<AddressDetailsModalProps> = ({
         </View>
 
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-          <View style={styles.section}>{renderPhotos()}</View>
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Description</Text>
-            <Text style={styles.description}>{address.description}</Text>
-          </View>
-
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Localisation</Text>
-            <View style={styles.locationContainer}>
-              <Ionicons name="location" size={16} color="#666" />
-              <Text style={styles.coordinates}>
-                {address.latitude.toFixed(6)}, {address.longitude.toFixed(6)}
-              </Text>
+          <View>{renderPhotos()}</View>
+          <View style={styles.wrapper}>
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Description</Text>
+              <Text style={styles.description}>{address.description}</Text>
             </View>
-          </View>
 
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Avis</Text>
-              {canAddReview && (
-                <TouchableOpacity
-                  style={styles.addReviewButton}
-                  onPress={() => setShowReviewModal(true)}
-                >
-                  <Ionicons name="add" size={20} color="#2ecc71" />
-                  <Text style={styles.addReviewText}>Ajouter un avis</Text>
-                </TouchableOpacity>
-              )}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Localisation</Text>
+              <View style={styles.locationContainer}>
+                <Ionicons name="location" size={16} color="#666" />
+                <Text style={styles.coordinates}>
+                  {address.latitude.toFixed(6)}, {address.longitude.toFixed(6)}
+                </Text>
+              </View>
             </View>
-            <View style={styles.reviewsContainer}>
-              {loading ? (
-                <View style={styles.loadingContainer}>
-                  <ActivityIndicator size="small" color="#2ecc71" />
-                  <Text style={styles.loadingText}>Chargement des avis...</Text>
-                </View>
-              ) : address.reviews && address.reviews.length > 0 ? (
-                address.reviews.map((review, index) => (
-                  <View key={index} style={styles.reviewItem}>
-                    <View style={styles.reviewHeader}>
-                      <View style={styles.reviewUserInfo}>
-                        {review.userPhotoURL && (
-                          <Image
-                            source={{ uri: review.userPhotoURL }}
-                            style={styles.reviewerPhoto}
-                          />
-                        )}
-                        <View style={styles.reviewRatingAndDate}>
-                          <Text style={styles.reviewRating}>
-                            {"★".repeat(review.rating)}
-                            {"☆".repeat(5 - review.rating)}
-                          </Text>
-                          <Text style={styles.reviewDate}>
-                            {new Date(review.createdAt).toLocaleDateString()}
-                          </Text>
+
+            <View style={styles.section}>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>Avis</Text>
+                {canAddReview && (
+                  <TouchableOpacity
+                    style={styles.addReviewButton}
+                    onPress={() => setShowReviewModal(true)}
+                  >
+                    <Ionicons name="add" size={20} color="#2ecc71" />
+                    <Text style={styles.addReviewText}>Ajouter un avis</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+              <View style={styles.reviewsContainer}>
+                {loading ? (
+                  <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="small" color="#2ecc71" />
+                    <Text style={styles.loadingText}>
+                      Chargement des avis...
+                    </Text>
+                  </View>
+                ) : address.reviews && address.reviews.length > 0 ? (
+                  address.reviews.map((review, index) => (
+                    <View key={index} style={styles.reviewItem}>
+                      <View style={styles.reviewHeader}>
+                        <View style={styles.reviewUserInfo}>
+                          {review.userPhotoURL && (
+                            <Image
+                              source={{ uri: review.userPhotoURL }}
+                              style={styles.reviewerPhoto}
+                            />
+                          )}
+                          <View style={styles.reviewRatingAndDate}>
+                            <Text style={styles.reviewRating}>
+                              {"★".repeat(review.rating)}
+                              {"☆".repeat(5 - review.rating)}
+                            </Text>
+                            <Text style={styles.reviewDate}>
+                              {new Date(review.createdAt).toLocaleDateString()}
+                            </Text>
+                          </View>
                         </View>
                       </View>
+                      <Text style={styles.reviewComment}>{review.comment}</Text>
                     </View>
-                    <Text style={styles.reviewComment}>{review.comment}</Text>
-                  </View>
-                ))
-              ) : (
-                <Text style={styles.noReviewsText}>
-                  Aucun avis pour le moment
-                </Text>
-              )}
+                  ))
+                ) : (
+                  <Text style={styles.noReviewsText}>
+                    Aucun avis pour le moment
+                  </Text>
+                )}
+              </View>
             </View>
           </View>
         </ScrollView>
@@ -312,6 +299,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#fff",
   },
+  wrapper: {
+    padding: 16,
+  },
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -361,7 +351,6 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    paddingHorizontal: 16,
   },
   section: {
     marginVertical: 16,
@@ -386,37 +375,6 @@ const styles = StyleSheet.create({
     color: "#666",
     marginLeft: 8,
     fontFamily: "monospace",
-  },
-  noPhotosContainer: {
-    height: 120,
-    backgroundColor: "#f8f9fa",
-    justifyContent: "center",
-    alignItems: "center",
-    borderRadius: 8,
-  },
-  noPhotosText: {
-    fontSize: 14,
-    color: "#999",
-    marginTop: 8,
-  },
-  photo: {
-    width: 120,
-    height: 120,
-    borderRadius: 8,
-    marginRight: 8,
-  },
-  carouselContainer: {
-    paddingHorizontal: 16,
-  },
-  carouselItem: {
-    width: width - 32,
-    height: 200,
-    marginRight: 16,
-  },
-  carouselPhoto: {
-    width: "100%",
-    height: "100%",
-    borderRadius: 12,
   },
   reviewsContainer: {
     marginTop: 8,

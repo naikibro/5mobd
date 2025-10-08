@@ -13,6 +13,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import FullsizeImageCarousel from "../components/FullsizeImageCarousel";
 import { useAddressStore } from "../stores/addressStore";
 import { useAuthStore } from "../stores/authStore";
 import { AddressStackParamList } from "../types/navigation";
@@ -122,141 +123,132 @@ const AddressDetailsScreen: React.FC<Props> = ({ route }) => {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <View style={styles.header}>
-        <View style={styles.titleContainer}>
-          <Text style={styles.name}>{address.name}</Text>
-          <View style={styles.visibilityContainer}>
-            <Ionicons
-              name={address.isPublic ? "globe" : "lock-closed"}
-              size={20}
-              color={address.isPublic ? "#2ecc71" : "#e74c3c"}
-            />
-            <Text style={styles.visibilityText}>
-              {address.isPublic ? "Public" : "Privé"}
-            </Text>
-          </View>
-        </View>
-        {addressWithReviews && addressWithReviews.averageRating > 0 && (
-          <View style={styles.ratingContainer}>
-            <View style={styles.starsContainer}>
-              {renderStars(Math.round(addressWithReviews.averageRating))}
+      {address.photos && address.photos.length > 0 && (
+        <FullsizeImageCarousel photos={address.photos} />
+      )}
+      <View style={styles.wrapper}>
+        <View style={styles.header}>
+          <View style={styles.titleContainer}>
+            <Text style={styles.name}>{address.name}</Text>
+            <View style={styles.visibilityContainer}>
+              <Ionicons
+                name={address.isPublic ? "globe" : "lock-closed"}
+                size={20}
+                color={address.isPublic ? "#2ecc71" : "#e74c3c"}
+              />
+              <Text style={styles.visibilityText}>
+                {address.isPublic ? "Public" : "Privé"}
+              </Text>
             </View>
-            <Text style={styles.ratingText}>
-              {addressWithReviews.averageRating.toFixed(1)} (
-              {addressWithReviews.reviewCount} avis)
-            </Text>
+          </View>
+          {addressWithReviews && addressWithReviews.averageRating > 0 && (
+            <View style={styles.ratingContainer}>
+              <View style={styles.starsContainer}>
+                {renderStars(Math.round(addressWithReviews.averageRating))}
+              </View>
+              <Text style={styles.ratingText}>
+                {addressWithReviews.averageRating.toFixed(1)} (
+                {addressWithReviews.reviewCount} avis)
+              </Text>
+            </View>
+          )}
+        </View>
+
+        {address.description && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Description</Text>
+            <Text style={styles.description}>{address.description}</Text>
           </View>
         )}
-      </View>
 
-      {address.description && (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Description</Text>
-          <Text style={styles.description}>{address.description}</Text>
+          <Text style={styles.sectionTitle}>Informations</Text>
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Latitude:</Text>
+            <Text style={styles.infoValue}>{address.latitude.toFixed(6)}</Text>
+          </View>
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Longitude:</Text>
+            <Text style={styles.infoValue}>{address.longitude.toFixed(6)}</Text>
+          </View>
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Créé le:</Text>
+            <Text style={styles.infoValue}>
+              {formatDate(address.createdAt)}
+            </Text>
+          </View>
         </View>
-      )}
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Informations</Text>
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Latitude:</Text>
-          <Text style={styles.infoValue}>{address.latitude.toFixed(6)}</Text>
-        </View>
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Longitude:</Text>
-          <Text style={styles.infoValue}>{address.longitude.toFixed(6)}</Text>
-        </View>
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Créé le:</Text>
-          <Text style={styles.infoValue}>{formatDate(address.createdAt)}</Text>
-        </View>
-      </View>
-
-      {address.photos && address.photos.length > 0 && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Photos</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {address.photos.map((photo, index) => (
-              <Image
-                key={index}
-                source={{ uri: photo }}
-                style={styles.photo}
-                resizeMode="cover"
-              />
-            ))}
-          </ScrollView>
-        </View>
-      )}
-
-      {addressWithReviews && addressWithReviews.reviews.length > 0 && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>
-            Avis ({addressWithReviews.reviews.length})
-          </Text>
-          {addressWithReviews.reviews.map((review: any) => (
-            <View key={review.id} style={styles.reviewItem}>
-              <View style={styles.reviewHeader}>
-                <View style={styles.reviewUser}>
-                  <Text style={styles.reviewUserName}>
-                    {review.userDisplayName}
-                  </Text>
-                  <View style={styles.reviewStars}>
-                    {renderStars(review.rating)}
+        {addressWithReviews && addressWithReviews.reviews.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>
+              Avis ({addressWithReviews.reviews.length})
+            </Text>
+            {addressWithReviews.reviews.map((review: any) => (
+              <View key={review.id} style={styles.reviewItem}>
+                <View style={styles.reviewHeader}>
+                  <View style={styles.reviewUser}>
+                    <Text style={styles.reviewUserName}>
+                      {review.userDisplayName}
+                    </Text>
+                    <View style={styles.reviewStars}>
+                      {renderStars(review.rating)}
+                    </View>
                   </View>
+                  <Text style={styles.reviewDate}>
+                    {formatDate(review.createdAt)}
+                  </Text>
                 </View>
-                <Text style={styles.reviewDate}>
-                  {formatDate(review.createdAt)}
-                </Text>
+                {review.comment && (
+                  <Text style={styles.reviewComment}>{review.comment}</Text>
+                )}
+                {review.photos && review.photos.length > 0 && (
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                    {review.photos.map((photo: string, index: number) => (
+                      <Image
+                        key={index}
+                        source={{ uri: photo }}
+                        style={styles.reviewPhoto}
+                        resizeMode="cover"
+                      />
+                    ))}
+                  </ScrollView>
+                )}
               </View>
-              {review.comment && (
-                <Text style={styles.reviewComment}>{review.comment}</Text>
-              )}
-              {review.photos && review.photos.length > 0 && (
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                  {review.photos.map((photo: string, index: number) => (
-                    <Image
-                      key={index}
-                      source={{ uri: photo }}
-                      style={styles.reviewPhoto}
-                      resizeMode="cover"
-                    />
-                  ))}
-                </ScrollView>
-              )}
-            </View>
-          ))}
-        </View>
-      )}
+            ))}
+          </View>
+        )}
 
-      {user && (
-        <TouchableOpacity
-          style={styles.reviewButton}
-          onPress={() => navigation.navigate("Reviews", { address })}
-        >
-          <Ionicons
-            name="star"
-            size={20}
-            color="#fff"
-            style={{ marginRight: 8 }}
-          />
-          <Text style={styles.reviewButtonText}>Laisser un avis</Text>
-        </TouchableOpacity>
-      )}
+        {user && (
+          <TouchableOpacity
+            style={styles.reviewButton}
+            onPress={() => navigation.navigate("Reviews", { address })}
+          >
+            <Ionicons
+              name="star"
+              size={20}
+              color="#fff"
+              style={{ marginRight: 8 }}
+            />
+            <Text style={styles.reviewButtonText}>Laisser un avis</Text>
+          </TouchableOpacity>
+        )}
 
-      {user && user.uid === address.userId && (
-        <TouchableOpacity
-          style={styles.deleteButton}
-          onPress={handleDeleteAddress}
-        >
-          <Ionicons
-            name="trash"
-            size={20}
-            color="#fff"
-            style={{ marginRight: 8 }}
-          />
-          <Text style={styles.deleteButtonText}>Supprimer cette adresse</Text>
-        </TouchableOpacity>
-      )}
+        {user && user.uid === address.userId && (
+          <TouchableOpacity
+            style={styles.deleteButton}
+            onPress={handleDeleteAddress}
+          >
+            <Ionicons
+              name="trash"
+              size={20}
+              color="#fff"
+              style={{ marginRight: 8 }}
+            />
+            <Text style={styles.deleteButtonText}>Supprimer cette adresse</Text>
+          </TouchableOpacity>
+        )}
+      </View>
     </ScrollView>
   );
 };
@@ -271,7 +263,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   content: {
-    padding: 16,
     ...Platform.select({
       web: {
         maxWidth: 800,
@@ -279,6 +270,9 @@ const styles = StyleSheet.create({
         width: "100%",
       },
     }),
+  },
+  wrapper: {
+    padding: 16,
   },
   header: {
     backgroundColor: "#fff",
@@ -368,12 +362,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#333",
     fontWeight: "600",
-  },
-  photo: {
-    width: 120,
-    height: 120,
-    borderRadius: 8,
-    marginRight: 12,
   },
   reviewItem: {
     backgroundColor: "#f8f9fa",
