@@ -40,11 +40,22 @@ const MapScreen = () => {
   const mapRef = useRef<MapView>(null);
   const rainbowAnimation = useRef(new Animated.Value(0)).current;
 
-  const initialRegion: Region = {
-    latitude: 48.8566, // Paris coordinates as default
-    longitude: 2.3522,
-    latitudeDelta: 0.0922,
-    longitudeDelta: 0.0421,
+  const getInitialRegion = (): Region => {
+    if (location) {
+      return {
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      };
+    }
+    // Fallback to Paris coordinates if location not available
+    return {
+      latitude: 48.8566,
+      longitude: 2.3522,
+      latitudeDelta: 0.0922,
+      longitudeDelta: 0.0421,
+    };
   };
 
   useEffect(() => {
@@ -242,11 +253,15 @@ const MapScreen = () => {
       <MapView
         ref={mapRef}
         style={styles.map}
-        initialRegion={initialRegion}
+        initialRegion={getInitialRegion()}
         showsUserLocation={true}
         showsMyLocationButton={false}
         showsCompass={true}
         showsScale={true}
+        followsUserLocation={true}
+        showsBuildings={true}
+        showsTraffic={true}
+        showsPointsOfInterest={true}
       >
         {renderMarkers()}
       </MapView>

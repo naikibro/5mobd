@@ -76,14 +76,6 @@ const AddressListScreen = () => {
           if (streetName) {
             newStreetNames.push(key, streetName);
           }
-
-          // Debug rate limiting status
-          const rateLimitStatus = getRateLimitStatus();
-          if (rateLimitStatus.callsThisMinute > 20) {
-            console.log(
-              `Rate limit status: ${rateLimitStatus.callsThisMinute}/${rateLimitStatus.maxCallsPerMinute} calls this minute`
-            );
-          }
         } catch (error) {
           console.error("Error getting street name:", error);
         }

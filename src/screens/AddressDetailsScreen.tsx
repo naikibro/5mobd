@@ -14,6 +14,7 @@ import {
   View,
 } from "react-native";
 import FullsizeImageCarousel from "../components/FullsizeImageCarousel";
+import { useGeocoding } from "../hooks/useGeocoding";
 import { useAddressStore } from "../stores/addressStore";
 import { useAuthStore } from "../stores/authStore";
 import { AddressStackParamList } from "../types/navigation";
@@ -35,12 +36,27 @@ const AddressDetailsScreen: React.FC<Props> = ({ route }) => {
     useNavigation<NativeStackNavigationProp<AddressStackParamList>>();
   const { deleteAddress, getAddressWithReviews } = useAddressStore();
   const { user } = useAuthStore();
+  const { getStreetName } = useGeocoding();
   const [addressWithReviews, setAddressWithReviews] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [streetAddress, setStreetAddress] = useState<string | null>(null);
 
   useEffect(() => {
     loadAddressDetails();
+    loadStreetAddress();
   }, []);
+
+  const loadStreetAddress = async () => {
+    try {
+      const streetName = await getStreetName({
+        latitude: address.latitude,
+        longitude: address.longitude,
+      });
+      setStreetAddress(streetName);
+    } catch (error) {
+      console.error("Error loading street address:", error);
+    }
+  };
 
   const loadAddressDetails = async () => {
     try {
@@ -163,6 +179,16 @@ const AddressDetailsScreen: React.FC<Props> = ({ route }) => {
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Informations</Text>
+
+          <View style={styles.addressRow}>
+            <Text style={styles.infoLabel}>Adresse:</Text>
+            <Text style={styles.addressValue}>
+              {streetAddress ||
+                `${address.latitude.toFixed(4)}, ${address.longitude.toFixed(
+                  4
+                )}`}
+            </Text>
+          </View>
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>Latitude:</Text>
             <Text style={styles.infoValue}>{address.latitude.toFixed(6)}</Text>
@@ -353,6 +379,13 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#f0f0f0",
   },
+  addressRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0",
+  },
   infoLabel: {
     fontSize: 16,
     color: "#666",
@@ -362,6 +395,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#333",
     fontWeight: "600",
+  },
+  addressValue: {
+    fontSize: 16,
+    color: "#333",
+    fontWeight: "600",
+    flex: 1,
+    marginLeft: 12,
+    lineHeight: 22,
   },
   reviewItem: {
     backgroundColor: "#f8f9fa",
