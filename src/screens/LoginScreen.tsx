@@ -14,7 +14,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuthStore } from "../stores/authStore";
-const { width } = Dimensions.get("window");
+const { width: _screenWidth } = Dimensions.get("window");
 
 interface Props {
   navigation: any;
@@ -23,7 +23,7 @@ interface Props {
 const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const { signIn, loading: authLoading, error } = useAuthStore();
+  const { signIn, loading: authLoading } = useAuthStore();
 
   // Animation values for slide-in effect
   const [logoAnim] = useState(new Animated.Value(-100));

@@ -19,7 +19,7 @@ import { useAddressStore } from "../stores/addressStore";
 import { useAuthStore } from "../stores/authStore";
 import { AddressStackParamList } from "../types/navigation";
 
-const { width } = Dimensions.get("window");
+const { width: _screenWidth } = Dimensions.get("window");
 
 type AddressDetailsScreenRouteProp = RouteProp<
   AddressStackParamList,
@@ -54,6 +54,7 @@ const AddressDetailsScreen: React.FC<Props> = ({ route }) => {
       });
       setStreetAddress(streetName);
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error("Error loading street address:", error);
     }
   };
@@ -63,6 +64,7 @@ const AddressDetailsScreen: React.FC<Props> = ({ route }) => {
       const details = await getAddressWithReviews(address.id);
       setAddressWithReviews(details);
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error("Error loading address details:", error);
     } finally {
       setLoading(false);

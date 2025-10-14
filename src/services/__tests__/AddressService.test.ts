@@ -86,10 +86,8 @@ describe("AddressService", () => {
         updatedAt: new Date(),
       };
 
-      const { getDoc, deleteDoc, getDocs } = require("firebase/firestore");
-      const { deleteObject } = require("firebase/storage");
-
       // Mock getAddressById
+      const { getDoc } = require("firebase/firestore");
       getDoc.mockResolvedValueOnce({
         exists: () => true,
         id: "address123",
@@ -97,12 +95,15 @@ describe("AddressService", () => {
       });
 
       // Mock deletePhoto calls
+      const { deleteObject } = require("firebase/storage");
       deleteObject.mockResolvedValue(undefined);
 
       // Mock deleteDoc for address
+      const { deleteDoc } = require("firebase/firestore");
       deleteDoc.mockResolvedValue(undefined);
 
       // Mock reviews query
+      const { getDocs } = require("firebase/firestore");
       getDocs.mockResolvedValueOnce({
         docs: [{ ref: "review1" }, { ref: "review2" }],
       });
@@ -271,9 +272,8 @@ describe("AddressService", () => {
         createdAt: { toDate: () => new Date("2023-01-03") },
       };
 
-      const { getDoc, getDocs } = require("firebase/firestore");
-
       // Mock getAddressById
+      const { getDoc } = require("firebase/firestore");
       getDoc.mockResolvedValueOnce({
         exists: () => true,
         id: "address123",
@@ -281,6 +281,7 @@ describe("AddressService", () => {
       });
 
       // Mock getReviewsByAddress
+      const { getDocs } = require("firebase/firestore");
       getDocs.mockResolvedValueOnce({
         docs: [
           {

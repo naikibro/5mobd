@@ -91,6 +91,7 @@ const MapScreen = () => {
         setLoading(false);
       }
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error("Error getting location permission:", error);
       setLoading(false);
     }
@@ -113,6 +114,7 @@ const MapScreen = () => {
         });
       }
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error("Error getting current location:", error);
     } finally {
       setLoading(false);
@@ -124,6 +126,7 @@ const MapScreen = () => {
       await fetchPublicAddresses();
       // Note: Addresses will be available from the store
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error("Error loading addresses:", error);
     }
   };
@@ -148,6 +151,7 @@ const MapScreen = () => {
         setModalVisible(true);
       }
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error("Error fetching address details:", error);
       // Fallback to basic address if fetch fails
       setSelectedAddress(address as AddressWithReviews);
@@ -170,6 +174,7 @@ const MapScreen = () => {
           setSelectedAddress(updatedAddress);
         }
       } catch (error) {
+        // eslint-disable-next-line no-console
         console.error("Error refreshing address after review:", error);
       }
     }
@@ -311,8 +316,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   map: {
-    width: width,
-    height: height,
+    width,
+    height,
   },
   loadingContainer: {
     flex: 1,

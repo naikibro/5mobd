@@ -7,7 +7,6 @@ import {
   StyleSheet,
   Alert,
   ScrollView,
-  Platform,
   Dimensions,
   ActivityIndicator,
 } from "react-native";
@@ -17,7 +16,7 @@ import { RootStackParamList } from "../types/navigation";
 import { useAddressStore } from "../stores/addressStore";
 import { useAuthStore } from "../stores/authStore";
 
-const { width } = Dimensions.get("window");
+const { width: _screenWidth } = Dimensions.get("window");
 
 type ReviewScreenRouteProp = RouteProp<RootStackParamList, "Reviews">;
 
@@ -70,6 +69,7 @@ const ReviewScreen = () => {
         },
       ]);
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error("Error adding review:", error);
       Alert.alert("Erreur", "Impossible d'ajouter votre avis");
     } finally {

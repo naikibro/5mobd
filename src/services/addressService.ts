@@ -89,6 +89,7 @@ class AddressService {
         try {
           await this.deletePhoto(photoUrl);
         } catch (err) {
+          // eslint-disable-next-line no-console
           console.warn("Failed to delete photo:", err);
         }
       }

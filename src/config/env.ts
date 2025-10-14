@@ -33,25 +33,39 @@ function validateEnv() {
         message: err.message,
       }));
 
+      // eslint-disable-next-line no-console
       console.error("\n❌ Environment Configuration Error\n");
+      // eslint-disable-next-line no-console
       console.error("━".repeat(50));
+      // eslint-disable-next-line no-console
       console.error("\n🔥 Missing or invalid environment variables:\n");
 
       missingVars.forEach(({ field, message }) => {
+        // eslint-disable-next-line no-console
         console.error(`  • ${field}`);
+        // eslint-disable-next-line no-console
         console.error(`    └─ ${message}\n`);
       });
 
+      // eslint-disable-next-line no-console
       console.error("━".repeat(50));
+      // eslint-disable-next-line no-console
       console.error("\n📝 To fix this:");
+      // eslint-disable-next-line no-console
       console.error(
         "  1. Make sure you have a .env file in the root directory"
       );
+      // eslint-disable-next-line no-console
       console.error("  2. Copy .env.example to .env if you haven't already");
+      // eslint-disable-next-line no-console
       console.error("  3. Fill in all the required Firebase credentials");
+      // eslint-disable-next-line no-console
       console.error("\n💡 Get your credentials from:");
+      // eslint-disable-next-line no-console
       console.error("  https://console.firebase.google.com/\n");
+      // eslint-disable-next-line no-console
       console.error("━".repeat(50));
+      // eslint-disable-next-line no-console
       console.error("");
 
       throw new Error(

@@ -386,8 +386,8 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   fullscreenImage: {
-    width: width,
-    height: height,
+    width,
+    height,
   },
   closeButton: {
     position: "absolute",

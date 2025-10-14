@@ -93,6 +93,7 @@ class GoogleMapsService {
 
       return null;
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error("Google Maps reverse geocoding error:", error);
       return null;
     }
@@ -161,6 +162,7 @@ class GoogleMapsService {
 
       return null;
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error("Google Maps detailed address error:", error);
       return null;
     }

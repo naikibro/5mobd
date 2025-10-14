@@ -31,11 +31,7 @@ const AddressListScreen = () => {
     addresses,
     isPolling,
   } = useAddressStore();
-  const {
-    getStreetName,
-    isLoading: isGeocodingLoading,
-    getRateLimitStatus,
-  } = useGeocoding();
+  const { getStreetName, isLoading: isGeocodingLoading } = useGeocoding();
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [streetNames, setStreetNames] = useState<Map<string, string>>(
@@ -51,6 +47,7 @@ const AddressListScreen = () => {
     try {
       await fetchPublicAddresses();
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error("Error loading addresses:", error);
     }
   }, [fetchPublicAddresses]);
@@ -77,6 +74,7 @@ const AddressListScreen = () => {
             newStreetNames.push(key, streetName);
           }
         } catch (error) {
+          // eslint-disable-next-line no-console
           console.error("Error getting street name:", error);
         }
       }
@@ -110,9 +108,10 @@ const AddressListScreen = () => {
     if (query.trim()) {
       setIsSearching(true);
       try {
-        const results = await searchAddresses(query, "public");
+        await searchAddresses(query, "public");
         // Note: The search results will be handled by the store
       } catch (error) {
+        // eslint-disable-next-line no-console
         console.error("Error searching addresses:", error);
       } finally {
         setIsSearching(false);

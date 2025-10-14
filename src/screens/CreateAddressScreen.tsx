@@ -23,7 +23,7 @@ import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../types/navigation";
 
-const { width, height } = Dimensions.get("window");
+const { width: _screenWidth, height: _screenHeight } = Dimensions.get("window");
 
 const CreateAddressScreen = () => {
   const { createAddress, uploadPhoto } = useAddressStore();
@@ -33,9 +33,6 @@ const CreateAddressScreen = () => {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [isPublic, setIsPublic] = useState(true);
-  const [location, setLocation] = useState<Location.LocationObject | null>(
-    null
-  );
   const [selectedLocation, setSelectedLocation] = useState<{
     latitude: number;
     longitude: number;
@@ -61,7 +58,6 @@ const CreateAddressScreen = () => {
         const currentLocation = await Location.getCurrentPositionAsync({
           accuracy: Location.Accuracy.Balanced,
         });
-        setLocation(currentLocation);
         setSelectedLocation({
           latitude: currentLocation.coords.latitude,
           longitude: currentLocation.coords.longitude,
@@ -73,7 +69,9 @@ const CreateAddressScreen = () => {
           longitudeDelta: 0.01,
         });
       }
-    } catch (error) {}
+    } catch {
+      // Location permission denied or error occurred
+    }
   };
 
   const handleMapPress = (event: any) => {
@@ -103,7 +101,7 @@ const CreateAddressScreen = () => {
       if (!result.canceled && result.assets[0]) {
         await processAndUploadImage(result.assets[0]);
       }
-    } catch (error) {
+    } catch {
       Alert.alert("Erreur", "Impossible de sélectionner l'image");
     }
   };
@@ -128,7 +126,7 @@ const CreateAddressScreen = () => {
       if (!result.canceled && result.assets[0]) {
         await processAndUploadImage(result.assets[0]);
       }
-    } catch (error) {
+    } catch {
       Alert.alert("Erreur", "Impossible de prendre la photo");
     }
   };
@@ -137,16 +135,16 @@ const CreateAddressScreen = () => {
     try {
       // Try to get storage metadata first
       try {
-        const { getMetadata, listAll, ref } = await import("firebase/storage");
+        const { listAll, ref } = await import("firebase/storage");
 
         // Try to list files in the root to test bucket access
         try {
           const rootRef = ref(storage, "");
           await listAll(rootRef);
-        } catch (listError) {
+        } catch {
           // Don't return false here, continue with upload test
         }
-      } catch (importError) {
+      } catch {
         return false;
       }
 
@@ -155,10 +153,10 @@ const CreateAddressScreen = () => {
       const testBlob = new Blob([testContent], { type: "text/plain" });
       const testPath = `test/${user?.uid}/connection-test.txt`;
 
-      const downloadURL = await uploadPhoto(testBlob, testPath);
+      const _downloadURL = await uploadPhoto(testBlob, testPath);
 
       return true;
-    } catch (error) {
+    } catch {
       return false;
     }
   };
@@ -195,13 +193,8 @@ const CreateAddressScreen = () => {
 
       // Add to photos array
       setPhotos((prev) => [...prev, downloadURL]);
-    } catch (error) {
-      Alert.alert(
-        "Erreur",
-        `Impossible de traiter l'image: ${
-          (error as any)?.message || "Erreur inconnue"
-        }`
-      );
+    } catch {
+      Alert.alert("Erreur", `Impossible de traiter l'image: Erreur inconnue`);
     } finally {
       setUploadingPhotos(false);
     }
@@ -244,7 +237,7 @@ const CreateAddressScreen = () => {
         longitude: selectedLocation.longitude,
         isPublic,
         userId: user.uid,
-        photos: photos,
+        photos,
       });
 
       Alert.alert("Succès", "Adresse créée avec succès", [
@@ -279,7 +272,7 @@ const CreateAddressScreen = () => {
           },
         },
       ]);
-    } catch (error) {
+    } catch {
       Alert.alert("Erreur", "Impossible de créer l'adresse");
     } finally {
       setLoading(false);

@@ -43,6 +43,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           const userProfile = await authService.loadUserProfile();
           set({ userProfile, loading: false, error: null });
         } catch (error) {
+          // eslint-disable-next-line no-console
           console.error("Error loading user profile:", error);
           set({
             userProfile: null,

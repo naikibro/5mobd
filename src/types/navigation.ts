@@ -1,4 +1,4 @@
-import { Address, Review } from "./address";
+import { Address } from "./address";
 
 export type RootStackParamList = {
   MainTabs: { screen?: keyof MainTabParamList } | undefined;
