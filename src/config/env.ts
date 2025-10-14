@@ -17,6 +17,9 @@ const envSchema = z.object({
     .string()
     .min(1, "Firebase Messaging Sender ID is required"),
   EXPO_PUBLIC_FIREBASE_APP_ID: z.string().min(1, "Firebase App ID is required"),
+  EXPO_PUBLIC_GOOGLE_MAPS_API_KEY: z
+    .string()
+    .min(1, "Google Maps API Key is required"),
 });
 
 function validateEnv() {

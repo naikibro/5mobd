@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from "react";
-import * as Location from "expo-location";
+import googleMapsService from "../services/googleMapsService";
 
 interface Geocode {
   latitude: number;
@@ -41,8 +41,8 @@ class GeocodingCache {
 
 class RateLimiter {
   public lastCall = 0;
-  public readonly MIN_INTERVAL = 2000; // 2 seconds between calls
-  public readonly MAX_CALLS_PER_MINUTE = 30; // Conservative limit
+  public readonly MIN_INTERVAL = 100; // 100ms between calls (Google Maps allows much higher rates)
+  public readonly MAX_CALLS_PER_MINUTE = 1000; // Google Maps allows up to 50 requests per second
   public callsThisMinute = 0;
   private minuteStart = Date.now();
 
@@ -57,9 +57,6 @@ class RateLimiter {
 
     // Check if we've exceeded the per-minute limit
     if (this.callsThisMinute >= this.MAX_CALLS_PER_MINUTE) {
-      console.warn(
-        `Geocoding rate limit exceeded: ${this.MAX_CALLS_PER_MINUTE} calls per minute`
-      );
       return false;
     }
 
@@ -106,15 +103,11 @@ export const useGeocoding = () => {
       // Rate limiting check
       if (!rateLimiter.canMakeCall()) {
         const waitTime = rateLimiter.getTimeUntilNextCall();
-        console.warn(`Geocoding rate limit exceeded, waiting ${waitTime}ms`);
 
         // Wait and retry once
         await new Promise((resolve) => setTimeout(resolve, waitTime));
 
         if (!rateLimiter.canMakeCall()) {
-          console.warn(
-            "Geocoding still rate limited after retry, skipping call"
-          );
           return null;
         }
       }
@@ -124,8 +117,7 @@ export const useGeocoding = () => {
           setIsLoading(true);
           setError(null);
 
-          const result = await Location.reverseGeocodeAsync(geocode);
-          const streetName = result[0]?.street || null;
+          const streetName = await googleMapsService.reverseGeocode(geocode);
 
           // Cache the result
           cache.set(geocode, streetName);
@@ -134,7 +126,7 @@ export const useGeocoding = () => {
         } catch (err) {
           const errorMessage =
             err instanceof Error ? err.message : "Geocoding failed";
-          console.error("Geocoding error:", errorMessage);
+          console.error("Google Maps geocoding error:", errorMessage);
           setError(errorMessage);
 
           // Cache null result to avoid repeated failed calls
@@ -155,15 +147,30 @@ export const useGeocoding = () => {
 
   const batchGetStreetNames = useCallback(
     async (geocodes: Geocode[]): Promise<(string | null)[]> => {
-      const results = await Promise.allSettled(
-        geocodes.map((geocode) => getStreetName(geocode))
-      );
+      try {
+        setIsLoading(true);
+        setError(null);
 
-      return results.map((result) =>
-        result.status === "fulfilled" ? result.value : null
-      );
+        const results = await googleMapsService.batchReverseGeocode(geocodes);
+
+        // Cache the results
+        geocodes.forEach((geocode, index) => {
+          cache.set(geocode, results[index]);
+        });
+
+        return results;
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : "Batch geocoding failed";
+        console.error("Google Maps batch geocoding error:", errorMessage);
+        setError(errorMessage);
+
+        return geocodes.map(() => null);
+      } finally {
+        setIsLoading(false);
+      }
     },
-    [getStreetName]
+    []
   );
 
   const getRateLimitStatus = useCallback(() => {
