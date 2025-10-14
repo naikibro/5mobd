@@ -1,0 +1,24 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# You must follow my conventionnal commits style
+
+When asked to generate a commit, please always refer to the commitlint config
+
+here is a model of a perfect commit:
+
+```sh
+git commit -am "feat(api) port Flights service and models
+
+- created Flights service and store
+- covered new service and store with unit tests
+- imported all Types (models) from v1 app
+- added Jest for Expo and setup
+- added docs concerning the API fetching token mechanism"
+```
+
+- the commits comments lines shall start with list and minuscule letters
+- the commit message shall be conventionnal, short and descriptive
+

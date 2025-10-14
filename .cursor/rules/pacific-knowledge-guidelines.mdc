@@ -1,0 +1,11 @@
+---
+alwaysApply: true
+---
+
+# About installing packages
+
+- You should always use Yarn
+- Always try to use stable versions and use a fix version in the package.json instead of using the latest
+- Always install the types
+- install devs dependencies as dev deps to enhance bundle size and performance
+- do no use deprecated packages or exports

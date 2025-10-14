@@ -1,0 +1,228 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Clean Code Principles
+
+## Introduction
+Clean code is like a well-crafted speech - it should be clear, concise, and easily understood by its audience. As Martin Fowler said, "Anybody can write code that a computer can understand. Good programmers write code that humans can understand."
+
+## Why Clean Code Matters
+
+### Readability and Maintenance
+- Makes code easier to read and understand
+- Reduces time required to grasp functionality
+- Enables faster development and modifications
+- Simplifies debugging and issue resolution
+
+### Team Collaboration
+- Facilitates communication between team members
+- Makes code review process more efficient
+- Enables easier onboarding of new team members
+- Promotes consistent coding standards
+
+### Quality and Reliability
+- Reduces risk of introducing errors
+- Makes code more maintainable
+- Improves software quality
+- Enables easier testing and validation
+
+## Core Principles
+
+### 1. Meaningful Names
+- Use descriptive and intention-revealing names
+- Avoid generic names like `data`, `value`, `item`
+- Make names searchable and pronounceable
+- Use consistent naming conventions
+- Avoid abbreviations unless widely understood
+
+Example:
+```typescript
+// Bad
+const d = 0.1;
+const p = 100;
+
+// Good
+const DISCOUNT_RATE = 0.1;
+const PRODUCT_PRICE = 100;
+```
+
+### 2. Functions
+- Keep functions small and focused
+- Follow Single Responsibility Principle
+- Use descriptive names that reveal intent
+- Limit function parameters (ideally 2 or fewer)
+- Avoid side effects
+- Return early to avoid deep nesting
+
+Example:
+```typescript
+// Bad
+function process(data) {
+  if (data) {
+    if (data.isValid) {
+      // ... lots of code ...
+    }
+  }
+}
+
+// Good
+function processUserData(userData: UserData): ProcessedData {
+  if (!userData) return null;
+  if (!isValidUserData(userData)) return null;
+  return transformUserData(userData);
+}
+```
+
+### 3. Comments
+- Write self-documenting code instead of comments
+- Use comments to explain "why" not "what"
+- Keep comments up to date
+- Remove commented-out code
+- Use comments for complex algorithms or business rules
+
+Example:
+```typescript
+// Bad
+// This function calculates the total
+function calc(x, y) {
+  return x + y;
+}
+
+// Good
+/**
+ * Calculates the total price including tax
+ * @param basePrice - The price before tax
+ * @param taxRate - The applicable tax rate
+ * @returns The total price including tax
+ */
+function calculateTotalWithTax(basePrice: number, taxRate: number): number {
+  return basePrice * (1 + taxRate);
+}
+```
+
+### 4. DRY (Don't Repeat Yourself)
+- Avoid code duplication
+- Extract common functionality into reusable functions
+- Use inheritance and composition appropriately
+- Create utility functions for repeated operations
+- Use design patterns to avoid repetition
+
+Example:
+```typescript
+// Bad
+function calculateBookPrice(quantity: number, price: number): number {
+  return quantity * price;
+}
+
+function calculateLaptopPrice(quantity: number, price: number): number {
+  return quantity * price;
+}
+
+// Good
+function calculateProductPrice(quantity: number, price: number): number {
+  return quantity * price;
+}
+```
+
+### 5. Error Handling
+- Use proper error handling mechanisms
+- Avoid deep nesting of try-catch blocks
+- Create custom error types when needed
+- Handle errors at appropriate levels
+- Provide meaningful error messages
+
+Example:
+```typescript
+// Bad
+try {
+  // ... lots of code ...
+} catch (e) {
+  console.log(e);
+}
+
+// Good
+try {
+  await processUserData(userData);
+} catch (error) {
+  if (error instanceof ValidationError) {
+    handleValidationError(error);
+  } else if (error instanceof NetworkError) {
+    handleNetworkError(error);
+  } else {
+    handleUnexpectedError(error);
+  }
+}
+```
+
+### 6. Code Organization
+- Follow consistent file structure
+- Group related functionality
+- Use proper module organization
+- Maintain clear separation of concerns
+- Follow project-specific conventions
+
+### 7. Testing
+- Write unit tests for critical functionality
+- Follow testing best practices
+- Maintain good test coverage
+- Write meaningful test descriptions
+- Keep tests simple and focused
+
+### 8. Version Control
+- Write meaningful commit messages
+- Make atomic commits
+- Follow branching strategies
+- Review code before committing
+- Keep commits focused and small
+
+## Best Practices
+
+### Constants and Configuration
+- Use named constants instead of magic numbers
+- Centralize configuration
+- Use environment variables for sensitive data
+- Document configuration options
+- Validate configuration values
+
+### Code Style
+- Follow language-specific style guides
+- Use consistent formatting
+- Implement proper indentation
+- Follow naming conventions
+- Use proper spacing
+
+### Documentation
+- Keep documentation up to date
+- Document public APIs
+- Include usage examples
+- Document complex algorithms
+- Maintain README files
+
+### Performance
+- Write efficient code
+- Optimize critical paths
+- Use proper data structures
+- Implement caching where appropriate
+- Profile and measure performance
+
+## Tools and Resources
+
+### Code Quality Tools
+- ESLint for JavaScript/TypeScript
+- Prettier for code formatting
+- SonarQube for code analysis
+- Jest for testing
+- Husky for pre-commit hooks
+
+### Style Guides
+- [Google JavaScript Style Guide](mdc:https:/google.github.io/styleguide/jsguide.html)
+- [Airbnb JavaScript Style Guide](mdc:https:/github.com/airbnb/javascript)
+- [TypeScript Style Guide](mdc:https:/github.com/basarat/typescript-book/blob/master/docs/styleguide/styleguide.md)
+
+### Books and Resources
+- "Clean Code" by Robert C. Martin
+- "Refactoring" by Martin Fowler
+- "Code Complete" by Steve McConnell
+- "The Pragmatic Programmer" by Andrew Hunt and David Thomas

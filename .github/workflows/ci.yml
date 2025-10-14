@@ -1,0 +1,29 @@
+name: Unit Tests
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+jobs:
+  mobile-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "yarn"
+          cache-dependency-path: yarn.lock
+
+      - name: Install dependencies
+        run: yarn install
+
+      - name: Run tests
+        run: yarn test
