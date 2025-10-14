@@ -1,0 +1,156 @@
+---
+alwaysApply: false
+---
+
+You can apply this modular architecture guidelines in the frontend and mobile folders
+
+## Example Module: Auth
+
+```
+modules/
+├── auth/
+│   ├── assets/
+│   │    └── images/
+│   │        └── login_bg.png
+│   ├── components/
+│   │    └── AuthButton.tsx
+│   ├── constants/
+│   │    └── messages.ts      # Authentication-related error messages
+│   ├── hooks/
+│   │    └── useAuth.ts       # Connected user state management
+│   ├── services/
+│   │    └── authService.ts   # Authentication-related API calls
+│   ├── i18n/
+│   │    ├── en.ts            # English translations
+│   │    └── fr.ts            # French translations
+│   ├── types/
+│   │    └── AuthUser.ts      # Connected user type
+│   ├── utils/
+│   │    └── validation.ts    # Email and password verification
+│   └── index.tsx             # Entry point to group exports
+```
+
+---
+
+## Essential Rules
+
+1. **Maximum Modularity**
+
+   - Each module must be **independent** and easily integrable
+   - Components, hooks, and services should be **specific to the module**
+   - Avoid cross-module dependencies when possible
+
+2. **Function Centralization**
+
+   - **Services** should handle API calls and asynchronous logic
+   - **Hooks** should encapsulate specific business logic
+   - Keep core logic separate from UI components
+
+3. **Name Standardization**
+
+   - Components and files should be **precise and explicit** (`AuthButton.tsx`, `BookingMenu.tsx`)
+   - **Types** should indicate their context (`AuthUser`, `BookingDetails`)
+   - Use consistent naming conventions across all modules
+
+4. **Clear Translations**
+
+   - Keys should be **contextual and descriptive**: `auth.login.success`
+   - Files should be **separated by language** (`en.ts`, `fr.ts`)
+   - Maintain a hierarchical structure for translation keys
+
+5. **Single Entry Point**
+   - Use an `index.tsx` file to **aggregate exports** of components and services
+   - Enables importing the entire module with a single line
+   - Makes refactoring easier and code more maintainable
+
+---
+
+## Key Reminders
+
+- **Always isolate business logic in services**
+- **Don't mix global hooks with module-specific ones**
+- **Maintain strict typing to prevent data errors**
+- **Create one component per responsibility to promote reuse**
+- **Manage translations directly from the module to avoid overloading the global i18n module**
+- **Write unit tests for critical components and business logic**
+- **Document complex functions and components for better team understanding**
+
+---
+
+## Examples of Good Practices
+
+### Component Definition
+
+```tsx
+// Good: Component with clear name and typed props
+import React from "react";
+import { StyleSheet, TouchableOpacity, Text } from "react-native";
+import { AuthButtonProps } from "../types/components";
+
+export const AuthButton: React.FC<AuthButtonProps> = ({
+  title,
+  onPress,
+  disabled = false,
+}) => (
+  <TouchableOpacity
+    style={[styles.button, disabled && styles.disabled]}
+    onPress={onPress}
+    disabled={disabled}
+  >
+    <Text style={styles.text}>{title}</Text>
+  </TouchableOpacity>
+);
+
+const styles = StyleSheet.create({
+  button: {
+    backgroundColor: "#007AFF",
+    padding: 12,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  disabled: {
+    backgroundColor: "#CCCCCC",
+  },
+  text: {
+    color: "white",
+    fontWeight: "bold",
+  },
+});
+```
+
+### Service Implementation
+
+```tsx
+// Good: Service with clear responsibility
+import { API_ENDPOINTS } from "../constants/endpoints";
+import { AuthUser, LoginCredentials } from "../types/AuthUser";
+
+export const authService = {
+  login: async (credentials: LoginCredentials): Promise<AuthUser> => {
+    try {
+      const response = await fetch(API_ENDPOINTS.LOGIN, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(credentials),
+      });
+
+      if (!response.ok) {
+        throw new Error("Authentication failed");
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error("Login error:", error);
+      throw error;
+    }
+  },
+
+  logout: async (): Promise<void> => {
+    // Logout implementation
+  },
+};
+```
+
+This structured guide ensures a **clear, scalable, and maintainable** project architecture, ideal for complex and collaborative applications. 🚀

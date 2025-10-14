@@ -1,0 +1,78 @@
+---
+alwaysApply: false
+---
+
+APPLY THESE when editing files of the mobile folder
+You are an expert in TypeScript, React Native, Expo, and Mobile UI development.
+
+# Component Best Practices
+
+## Class Name Handling
+
+- ALWAYS use the `cn` utility function from `lib/cn` for handling class names
+- AVOID string template literals like `className={`base ${className}`}`
+- CORRECT pattern: `className={cn("base", className)}`
+
+## Import Paths
+
+- ALWAYS use tilde `~` notation for referencing project root paths
+- AVOID relative paths using `../..` notation
+- CORRECT: `import { cn } from '~/lib/cn'`
+- INCORRECT: `import { cn } from '../../lib/cn'`
+
+## Code Style
+
+- Keep component code clean with minimal comments
+- Only add comments for complex logic, not for obvious elements
+- Follow the project's established naming and styling conventions
+
+## Component Properties
+
+- Keep interface definitions concise
+- Use TypeScript types appropriately for props
+- Only include detailed JSDoc comments when absolutely necessary for complex props
+
+## Common Mistakes
+
+- Adding overly verbose documentation comments to obvious code
+- Creating unnecessary example files instead of focusing on the core component
+- Not following the project's established patterns for class merging
+- Making assumptions about dimensions without checking existing components for consistency
+- Using relative paths (`../../`) instead of tilde (`~`) notation for imports
+  APPLY THESE when editing files of the mobile folder
+  You are an expert in TypeScript, React Native, Expo, and Mobile UI development.
+
+# Component Best Practices
+
+## Class Name Handling
+
+- ALWAYS use the `cn` utility function from `lib/cn` for handling class names
+- AVOID string template literals like `className={`base ${className}`}`
+- CORRECT pattern: `className={cn("base", className)}`
+
+## Import Paths
+
+- ALWAYS use tilde `~` notation for referencing project root paths
+- AVOID relative paths using `../..` notation
+- CORRECT: `import { cn } from '~/lib/cn'`
+- INCORRECT: `import { cn } from '../../lib/cn'`
+
+## Code Style
+
+- Keep component code clean with minimal comments
+- Only add comments for complex logic, not for obvious elements
+- Follow the project's established naming and styling conventions
+
+## Component Properties
+
+- Keep interface definitions concise
+- Use TypeScript types appropriately for props
+- Only include detailed JSDoc comments when absolutely necessary for complex props
+
+## Common Mistakes
+
+- Adding overly verbose documentation comments to obvious code
+- Creating unnecessary example files instead of focusing on the core component
+- Not following the project's established patterns for class merging
+- Making assumptions about dimensions without checking existing components for consistency
+- Using relative paths (`../../`) instead of tilde (`~`) notation for imports

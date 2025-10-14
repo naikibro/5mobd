@@ -1,0 +1,192 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Development Guidelines
+
+## Code Style and Structure
+
+### Naming Conventions
+- **Components**: PascalCase (e.g., `UserProfile.tsx`, `AuthButton.tsx`)
+- **Hooks**: camelCase with 'use' prefix (e.g., `useAuth.ts`, `useFormValidation.ts`)
+- **Utilities**: camelCase (e.g., `formatDate.ts`, `apiClient.ts`)
+- **Constants**: UPPER_SNAKE_CASE (e.g., `API_ENDPOINTS.ts`, `APP_CONSTANTS.ts`)
+- **Types/Interfaces**: PascalCase (e.g., `UserType.ts`, `ApiResponse.ts`)
+- **Files**: Match the primary export name
+- **Test Files**: `*.test.ts` or `*.spec.ts` (e.g., `UserProfile.test.tsx`)
+
+### TypeScript Usage
+- Enable strict mode in `tsconfig.json`
+- Avoid using `any` type
+- Use proper type definitions for all props and state
+- Utilize TypeScript utility types (Partial, Pick, Omit, etc.)
+- Define proper return types for functions
+- Use proper type guards
+- Implement proper error types
+- Use proper generic types where applicable
+
+### Syntax and Formatting
+- Use ES6+ features
+- Implement proper destructuring
+- Use proper async/await patterns
+- Follow consistent import ordering
+- Use proper export patterns
+- Implement proper null checks
+- Use proper optional chaining
+- Follow consistent spacing and indentation
+
+## UI and Styling
+
+### Component Structure
+- Follow atomic design principles
+- Implement proper component composition
+- Use proper prop drilling alternatives
+- Follow proper component hierarchy
+- Implement proper component reusability
+
+### Styling Guidelines
+- Use NativeWind (Tailwind CSS) for styling
+- Follow mobile-first design principles
+- Implement proper responsive design
+- Use proper color system
+- Follow proper typography system
+- Implement proper spacing system
+- Use proper animation patterns
+
+### Safe Area Management
+- Use `SafeAreaView` for proper layout
+- Implement proper keyboard handling
+- Use proper status bar management
+- Handle proper notch areas
+- Implement proper bottom safe area
+
+## Performance Optimization
+
+### List Optimization
+- Use `FlatList` with proper configuration
+- Implement proper list virtualization
+- Use proper list item recycling
+- Implement proper list performance monitoring
+
+### Image Optimization
+- Use proper image caching
+- Implement proper image loading states
+- Use proper image formats
+- Implement proper image compression
+- Use proper image preloading
+
+### State Management
+- Use proper state management patterns
+- Implement proper state persistence
+- Use proper state synchronization
+- Implement proper state updates
+- Use proper state debugging
+
+## Navigation
+
+### Navigation Structure
+- Use React Navigation
+- Implement proper navigation types
+- Use proper navigation patterns
+- Implement proper deep linking
+- Use proper navigation state management
+
+### Screen Management
+- Implement proper screen transitions
+- Use proper screen lifecycle management
+- Implement proper screen state persistence
+- Use proper screen navigation patterns
+
+## Error Handling and Validation
+
+### Error Management
+- Implement proper error boundaries
+- Use proper error logging
+- Implement proper error recovery
+- Use proper error reporting
+- Implement proper error states
+
+### Form Validation
+- Use proper form validation patterns
+- Implement proper input validation
+- Use proper form state management
+- Implement proper form submission handling
+- Use proper form error handling
+
+## Testing
+
+### Unit Testing
+- Use Jest for unit testing
+- Implement proper test coverage
+- Use proper test patterns
+- Implement proper test organization
+- Use proper test utilities
+
+### Integration Testing
+- Use proper integration test patterns
+- Implement proper test scenarios
+- Use proper test data
+- Implement proper test cleanup
+- Use proper test assertions
+
+## Security
+
+### Data Security
+- Implement proper data encryption
+- Use proper secure storage
+- Implement proper API security
+- Use proper authentication patterns
+- Implement proper authorization checks
+
+### Code Security
+- Follow proper security best practices
+- Implement proper input sanitization
+- Use proper security patterns
+- Implement proper security checks
+- Use proper security monitoring
+
+## Internationalization (i18n)
+
+### Translation Management
+- Use proper translation patterns
+- Implement proper language switching
+- Use proper translation keys
+- Implement proper translation fallbacks
+- Use proper translation validation
+
+### RTL Support
+- Implement proper RTL support
+- Use proper RTL patterns
+- Implement proper RTL testing
+- Use proper RTL utilities
+- Implement proper RTL documentation
+
+## API Documentation
+
+### Expo Documentation
+- [Expo Views Documentation](mdc:https:/docs.expo.dev/versions/latest)
+- [Expo Blueprints](mdc:https:/docs.expo.dev/blueprints)
+- [Expo Extensions](mdc:https:/docs.expo.dev/extensions)
+
+### React Native Documentation
+- [React Native Core Components](mdc:https:/reactnative.dev/docs/components-and-apis)
+- [React Native APIs](mdc:https:/reactnative.dev/docs/accessibilityinfo)
+- [React Native Performance](mdc:https:/reactnative.dev/docs/performance)
+
+### TypeScript Documentation
+- [TypeScript Handbook](mdc:https:/www.typescriptlang.org/docs/handbook/intro.html)
+- [TypeScript Configuration](mdc:https:/www.typescriptlang.org/tsconfig)
+- [TypeScript Advanced Types](mdc:https:/www.typescriptlang.org/docs/handbook/advanced-types.html)
+
+## Additional Resources
+
+### Development Tools
+- [React Native Debugger](mdc:https:/github.com/jhen0409/react-native-debugger)
+- [Flipper](mdc:https:/fbflipper.com)
+- [React DevTools](mdc:https:/reactjs.org/blog/2019/08/15/new-react-devtools.html)
+
+### Community Resources
+- [React Native Community](mdc:https:/reactnative.dev/community)
+- [Expo Forums](mdc:https:/forums.expo.dev)
+- [Stack Overflow](mdc:https:/stackoverflow.com/questions/tagged/react-native)

@@ -1,0 +1,94 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Cursor Rules for React Native Expo Project
+
+## React Native Expo Best Practices
+- Use functional components with hooks
+- Utilize Expo SDK features and APIs
+- Implement proper navigation using React Navigation
+- Use Expo's asset system for images and fonts
+- Implement proper error handling and crash reporting
+- Utilize Expo's push notification system
+
+## File Structure
+```
+assets/
+src/
+  components/
+  screens/
+  navigation/
+  hooks/
+  utils/
+App.js
+app.json
+```
+
+## File Pattern Rules
+
+### TypeScript Files (`**/*.ts`)
+- Use TypeScript
+- Enforce strict type checking
+- Avoid using `any` type
+- Implement proper type definitions
+
+### TypeScript React Files (`**/*.tsx`)
+- Use functional components
+- Implement hooks
+- Define proper prop types
+- Avoid class components
+- Use proper imports
+
+### Style Files (`**/*.css`)
+- Use Tailwind classes
+- Avoid inline styles
+
+### Test Files (`**/*.test.ts`)
+- Write unit tests
+- Use proper test descriptions
+
+### Component Files (`src/components/**/*.tsx`)
+- Follow single responsibility principle
+- Implement proper error handling
+- Include proper loading states
+- Ensure proper accessibility
+
+### Hook Files (`src/hooks/**/*.ts`)
+- Use 'use' prefix for hook names
+- Implement proper error handling
+- Define proper type definitions
+
+### Navigation Files (`src/navigation/**/*.tsx`)
+- Use proper navigation types
+- Implement proper navigation structure
+
+### Asset Files (`src/assets/**/*`)
+- Optimize images
+- Use proper file formats
+
+## Naming Conventions
+- Components: PascalCase
+- Hooks: camelCase with 'use' prefix
+- Utilities: camelCase
+- Constants: UPPER_SNAKE_CASE
+- Types: PascalCase
+
+## Performance Guidelines
+- Use proper list virtualization
+- Implement proper memoization
+- Optimize images
+- Use proper caching strategies
+
+## Security Guidelines
+- Never include sensitive data in code
+- Implement proper authentication
+- Validate all input
+- Use environment variables for sensitive data
+
+## Additional Resources
+- [React Native Documentation](mdc:https:/reactnative.dev/docs/getting-started)
+- [Expo Documentation](mdc:https:/docs.expo.dev)
+- [TypeScript Documentation](mdc:https:/www.typescriptlang.org/docs)
+- [Tailwind CSS Documentation](mdc:https:/tailwindcss.com/docs)
