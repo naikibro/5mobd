@@ -19,6 +19,7 @@ import {
 import { db, storage } from "../../firebaseConfig";
 import { Address, AddressWithReviews, Review } from "../types/address";
 
+/* TODO : add unit tests for this service */
 class AddressService {
   // Convert Firestore timestamp to Date
   private convertTimestamp(timestamp: any): Date {

@@ -2,6 +2,15 @@ const mockAuth = {
   currentUser: null,
 };
 
+// Mock environment variables for tests
+process.env.EXPO_PUBLIC_FIREBASE_API_KEY = "test-api-key";
+process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN = "test-project.firebaseapp.com";
+process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID = "test-project";
+process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET = "test-project.appspot.com";
+process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID = "123456789";
+process.env.EXPO_PUBLIC_FIREBASE_APP_ID = "1:123456789:web:abcdef";
+process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY = "test-maps-api-key";
+
 jest.mock("firebase/auth", () => ({
   getAuth: jest.fn(() => mockAuth),
   createUserWithEmailAndPassword: jest.fn(),
@@ -43,6 +52,7 @@ jest.mock("firebase/storage", () => ({
   ref: jest.fn(),
   uploadBytes: jest.fn(),
   getDownloadURL: jest.fn(),
+  deleteObject: jest.fn(),
 }));
 
 jest.mock("firebase/app", () => ({

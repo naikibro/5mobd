@@ -20,6 +20,8 @@ export interface UserProfile {
   updatedAt: Date;
 }
 
+/* TODO : add unit tests for this service */
+
 class AuthService {
   private authStateUnsubscribe: (() => void) | null = null;
 
