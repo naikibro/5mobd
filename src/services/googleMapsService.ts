@@ -36,6 +36,8 @@ interface GoogleMapsGeocodeResponse {
   status: string;
 }
 
+/* TODO : add unit tests for this service */
+
 class GoogleMapsService {
   private readonly API_KEY: string;
   private readonly BASE_URL =

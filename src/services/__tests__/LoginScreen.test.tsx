@@ -1,13 +1,21 @@
 import React from "react";
 import { render, fireEvent, waitFor } from "@testing-library/react-native";
 import { Alert } from "react-native";
-import LoginScreen from "../src/screens/LoginScreen";
+import LoginScreen from "../../screens/LoginScreen";
 import { signInWithEmailAndPassword, onAuthStateChanged } from "firebase/auth";
 
 jest.mock("firebase/auth");
-jest.mock("../src/stores/authStore", () => ({
-  useAuthStore: () => ({
+jest.mock("../authService", () => ({
+  authService: {
     signIn: jest.fn(),
+    onAuthStateChanged: jest.fn(),
+  },
+}));
+
+const mockSignIn = jest.fn();
+jest.mock("../../stores/authStore", () => ({
+  useAuthStore: () => ({
+    signIn: mockSignIn,
     loading: false,
     error: null,
   }),
@@ -53,10 +61,7 @@ describe("LoginScreen", () => {
   });
 
   it("should call signInWithEmailAndPassword when login button is pressed with valid data", async () => {
-    const mockUser = { uid: "123", email: "test@example.com" };
-    (signInWithEmailAndPassword as jest.Mock).mockResolvedValue({
-      user: mockUser,
-    });
+    mockSignIn.mockResolvedValue(undefined);
 
     const { getByPlaceholderText, getByText } = render(<MockedLoginScreen />);
 
@@ -69,14 +74,15 @@ describe("LoginScreen", () => {
     fireEvent.press(loginButton);
 
     await waitFor(() => {
-      expect(signInWithEmailAndPassword).toHaveBeenCalled();
+      expect(mockSignIn).toHaveBeenCalledWith(
+        "test@example.com",
+        "password123"
+      );
     });
   });
 
   it("should show error alert on login failure", async () => {
-    (signInWithEmailAndPassword as jest.Mock).mockRejectedValue(
-      new Error("Invalid credentials")
-    );
+    mockSignIn.mockRejectedValue(new Error("Invalid credentials"));
 
     const { getByPlaceholderText, getByText } = render(<MockedLoginScreen />);
 

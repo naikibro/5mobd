@@ -5,6 +5,8 @@ interface Geocode {
   longitude: number;
 }
 
+/* TODO : add unit tests for this service */
+
 class GeolocationService {
   async getCurrentPosition() {
     const position = await Location.getCurrentPositionAsync({
