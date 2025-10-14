@@ -118,6 +118,7 @@ class AuthService {
         return await this.createUserProfile(auth.currentUser);
       }
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error("Error loading user profile:", error);
       throw error;
     }

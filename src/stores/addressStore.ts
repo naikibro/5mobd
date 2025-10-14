@@ -115,6 +115,7 @@ export const useAddressStore = create<AddressState>((set, get) => ({
       }
     } catch (error: any) {
       // Silent fail for polling - don't show errors
+      // eslint-disable-next-line no-console
       console.warn("Silent fetch failed:", error.message);
     }
   },
@@ -130,6 +131,7 @@ export const useAddressStore = create<AddressState>((set, get) => ({
       }
     } catch (error: any) {
       // Silent fail for polling - don't show errors
+      // eslint-disable-next-line no-console
       console.warn("Silent fetch failed:", error.message);
     }
   },
@@ -145,6 +147,7 @@ export const useAddressStore = create<AddressState>((set, get) => ({
       }
     } catch (error: any) {
       // Silent fail for polling - don't show errors
+      // eslint-disable-next-line no-console
       console.warn("Silent fetch failed:", error.message);
     }
   },

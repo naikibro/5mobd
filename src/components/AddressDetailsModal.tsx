@@ -18,7 +18,7 @@ import { useAuthStore } from "../stores/authStore";
 import { useAddressStore } from "../stores/addressStore";
 import FullsizeImageCarousel from "./FullsizeImageCarousel";
 
-const { width, height } = Dimensions.get("window");
+const { width: _screenWidth, height: _screenHeight } = Dimensions.get("window");
 
 interface AddressDetailsModalProps {
   visible: boolean;
@@ -35,7 +35,7 @@ const AddressDetailsModal: React.FC<AddressDetailsModalProps> = ({
   loading = false,
   onReviewAdded,
 }) => {
-  const { user, userProfile } = useAuthStore();
+  const { user } = useAuthStore();
   const { createReview } = useAddressStore();
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [rating, setRating] = useState(0);
@@ -80,7 +80,7 @@ const AddressDetailsModal: React.FC<AddressDetailsModalProps> = ({
           },
         },
       ]);
-    } catch (error) {
+    } catch {
       Alert.alert("Erreur", "Impossible d'ajouter votre avis");
     } finally {
       setSubmittingReview(false);

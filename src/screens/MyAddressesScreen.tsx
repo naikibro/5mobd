@@ -16,7 +16,7 @@ import { useAddressStore } from "../stores/addressStore";
 import { useAuthStore } from "../stores/authStore";
 import { Address } from "../types/address";
 
-const { width } = Dimensions.get("window");
+const { width: _screenWidth } = Dimensions.get("window");
 
 const MyAddressesScreen = () => {
   const {
@@ -44,6 +44,7 @@ const MyAddressesScreen = () => {
     try {
       await fetchUserAddresses(user.uid);
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error("Error loading my addresses:", error);
     }
   };
@@ -53,9 +54,10 @@ const MyAddressesScreen = () => {
     if (query.trim()) {
       setIsSearching(true);
       try {
-        const results = await searchAddresses(query, filter, user?.uid);
+        await searchAddresses(query, filter, user?.uid);
         // Note: The search results will be handled by the store
       } catch (error) {
+        // eslint-disable-next-line no-console
         console.error("Error searching addresses:", error);
       } finally {
         setIsSearching(false);

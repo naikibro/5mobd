@@ -2,7 +2,7 @@ import React from "react";
 import { render, fireEvent, waitFor } from "@testing-library/react-native";
 import { Alert } from "react-native";
 import LoginScreen from "../../screens/LoginScreen";
-import { signInWithEmailAndPassword, onAuthStateChanged } from "firebase/auth";
+import { onAuthStateChanged } from "firebase/auth";
 
 jest.mock("firebase/auth");
 jest.mock("../authService", () => ({

@@ -11,6 +11,9 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "build": "eas build --local --profile development",
+    "compile": "tsc --noEmit",
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
+    "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx --fix",
     "prebuild": "expo prebuild"
   },
   "dependencies": {
@@ -41,14 +44,18 @@
     "zustand": "^5.0.8"
   },
   "devDependencies": {
+    "@eslint/js": "^9.37.0",
     "@testing-library/jest-native": "^5.4.3",
     "@testing-library/react-native": "^13.3.3",
     "@types/jest": "^30.0.0",
     "@types/react": "~19.1.0",
+    "@typescript-eslint/eslint-plugin": "^8.46.1",
+    "@typescript-eslint/parser": "^8.46.1",
+    "eslint": "8.57.0",
     "firebase-admin": "^13.5.0",
     "jest": "~29.7.0",
     "jest-expo": "^54.0.12",
-    "react-test-renderer": "^19.1.0",
+    "react-test-renderer": "19.1.0",
     "typescript": "~5.9.2"
   },
   "private": true

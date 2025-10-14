@@ -126,6 +126,7 @@ export const useGeocoding = () => {
         } catch (err) {
           const errorMessage =
             err instanceof Error ? err.message : "Geocoding failed";
+          // eslint-disable-next-line no-console
           console.error("Google Maps geocoding error:", errorMessage);
           setError(errorMessage);
 
@@ -162,6 +163,7 @@ export const useGeocoding = () => {
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : "Batch geocoding failed";
+        // eslint-disable-next-line no-console
         console.error("Google Maps batch geocoding error:", errorMessage);
         setError(errorMessage);
 
@@ -174,8 +176,7 @@ export const useGeocoding = () => {
   );
 
   const getRateLimitStatus = useCallback(() => {
-    const now = Date.now();
-    const timeSinceLastCall = now - rateLimiter.lastCall;
+    const _now = Date.now();
     const timeUntilNextCall = rateLimiter.getTimeUntilNextCall();
 
     return {

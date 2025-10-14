@@ -15,7 +15,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useAuthStore } from "../stores/authStore";
 
-const { width } = Dimensions.get("window");
+const { width: _screenWidth } = Dimensions.get("window");
 
 interface Props {
   navigation: any;

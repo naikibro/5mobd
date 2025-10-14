@@ -7,14 +7,13 @@ import {
   StyleSheet,
   Alert,
   ScrollView,
-  ActivityIndicator,
   Platform,
   Dimensions,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import ProfilePhotoPicker from "../components/ProfilePhotoPicker";
 
-const { width } = Dimensions.get("window");
+const { width: _screenWidth } = Dimensions.get("window");
 import { useAuthStore } from "../stores/authStore";
 
 const ProfileScreen = () => {
@@ -103,7 +102,7 @@ const ProfileScreen = () => {
     try {
       await updateUserPhoto(photoUrl);
       Alert.alert("Succès", "Photo de profil mise à jour avec succès");
-    } catch (error: any) {
+    } catch {
       Alert.alert("Erreur", "Impossible de mettre à jour la photo de profil");
     }
   };
