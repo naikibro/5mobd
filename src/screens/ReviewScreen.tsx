@@ -12,13 +12,13 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { RouteProp, useRoute } from "@react-navigation/native";
-import { RootStackParamList } from "../types/navigation";
+import { AddressStackParamList } from "../types/navigation";
 import { useAddressStore } from "../stores/addressStore";
 import { useAuthStore } from "../stores/authStore";
 
 const { width: _screenWidth } = Dimensions.get("window");
 
-type ReviewScreenRouteProp = RouteProp<RootStackParamList, "Reviews">;
+type ReviewScreenRouteProp = RouteProp<AddressStackParamList, "Reviews">;
 
 const ReviewScreen = () => {
   const route = useRoute<ReviewScreenRouteProp>();
