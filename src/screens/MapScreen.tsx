@@ -24,7 +24,7 @@ import { RootStackParamList } from "../types/navigation";
 const { width, height } = Dimensions.get("window");
 
 const MapScreen = () => {
-  const { fetchPublicAddresses, getAddressWithReviews, addresses } =
+  const { fetchMapAddresses, getAddressWithReviews, addresses } =
     useAddressStore();
   const { user } = useAuthStore();
   const navigation =
@@ -122,8 +122,8 @@ const MapScreen = () => {
 
   const loadAddresses = async () => {
     try {
-      await fetchPublicAddresses();
-      // Note: Addresses will be available from the store
+      // Load public addresses + user's private addresses for map
+      await fetchMapAddresses(user?.uid);
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error("Error loading addresses:", error);

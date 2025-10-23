@@ -16,6 +16,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { AddressWithReviews } from "../types/address";
 import { useAuthStore } from "../stores/authStore";
 import { useAddressStore } from "../stores/addressStore";
+import { useFavorites } from "../hooks/useFavorites";
 import FullsizeImageCarousel from "./FullsizeImageCarousel";
 
 const { width: _screenWidth, height: _screenHeight } = Dimensions.get("window");
@@ -37,6 +38,7 @@ const AddressDetailsModal: React.FC<AddressDetailsModalProps> = ({
 }) => {
   const { user } = useAuthStore();
   const { createReview } = useAddressStore();
+  const { toggleFavorite, isFavoriteLocal } = useFavorites();
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
@@ -45,6 +47,24 @@ const AddressDetailsModal: React.FC<AddressDetailsModalProps> = ({
   if (!address) return null;
 
   const canAddReview = user && address.userId !== user.uid;
+  const isFavorite = isFavoriteLocal(address.id);
+
+  const handleFavoritePress = async () => {
+    try {
+      const wasFavorite = isFavorite;
+      await toggleFavorite(address.id);
+
+      // Show toast message
+      if (!wasFavorite) {
+        Alert.alert("⭐️", "Adresse ajoutée aux favoris⭐️", [], {
+          cancelable: true,
+        });
+      }
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error("Error toggling favorite:", error);
+    }
+  };
 
   const handleSubmitReview = async () => {
     if (rating === 0) {
@@ -69,17 +89,37 @@ const AddressDetailsModal: React.FC<AddressDetailsModalProps> = ({
         photos: [],
       });
 
-      Alert.alert("Succès", "Votre avis a été ajouté avec succès", [
-        {
-          text: "OK",
-          onPress: () => {
-            setShowReviewModal(false);
-            setRating(0);
-            setComment("");
-            onReviewAdded?.();
+      // Automatically add to favorites when adding a review
+      try {
+        const wasFavorite = isFavorite;
+        await toggleFavorite(address.id);
+
+        // Show toast for auto-favorite
+        if (!wasFavorite) {
+          Alert.alert("⭐️", "Adresse ajoutée aux favoris⭐️", [], {
+            cancelable: true,
+          });
+        }
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error("Error adding to favorites:", error);
+      }
+
+      Alert.alert(
+        "Succès",
+        "Votre avis a été ajouté avec succès et l'adresse a été ajoutée à vos favoris",
+        [
+          {
+            text: "OK",
+            onPress: () => {
+              setShowReviewModal(false);
+              setRating(0);
+              setComment("");
+              onReviewAdded?.();
+            },
           },
-        },
-      ]);
+        ]
+      );
     } catch {
       Alert.alert("Erreur", "Impossible d'ajouter votre avis");
     } finally {
@@ -160,6 +200,19 @@ const AddressDetailsModal: React.FC<AddressDetailsModalProps> = ({
               )}
             </View>
           </View>
+          {user && (
+            <TouchableOpacity
+              style={styles.favoriteButton}
+              onPress={handleFavoritePress}
+              testID={`favorite-button-${address.id}`}
+            >
+              <Ionicons
+                name={isFavorite ? "star" : "star-outline"}
+                size={24}
+                color={isFavorite ? "#ffd700" : "#666"}
+              />
+            </TouchableOpacity>
+          )}
         </View>
 
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
@@ -527,6 +580,10 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     fontWeight: "600",
+  },
+  favoriteButton: {
+    padding: 8,
+    marginLeft: 8,
   },
 });
 
