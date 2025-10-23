@@ -409,6 +409,7 @@ const CreateAddressScreen = () => {
               style={styles.map}
               region={mapRegion}
               onPress={handleMapPress}
+              testID="map-view"
               showsUserLocation={true}
               showsMyLocationButton={false}
             >
@@ -443,7 +444,12 @@ const CreateAddressScreen = () => {
           ) : (
             <>
               <Ionicons name="add-circle" size={20} color="#fff" />
-              <Text style={styles.submitButtonText}>Créer l'adresse</Text>
+              <Text
+                style={styles.submitButtonText}
+                testID="create-address-button"
+              >
+                Créer l'adresse
+              </Text>
             </>
           )}
         </TouchableOpacity>

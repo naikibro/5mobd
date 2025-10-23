@@ -55,20 +55,32 @@ function MainTabs() {
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
           let iconName: keyof typeof Ionicons.glyphMap;
-
+          let testID: string;
           if (route.name === "Addresses") {
             iconName = focused ? "location" : "location-outline";
+            testID = "addresses-tab";
           } else if (route.name === "Map") {
             iconName = focused ? "map" : "map-outline";
+            testID = "map-tab";
           } else if (route.name === "MyAddresses") {
             iconName = focused ? "bookmark" : "bookmark-outline";
+            testID = "my-addresses-tab";
           } else if (route.name === "Profile") {
             iconName = focused ? "person" : "person-outline";
+            testID = "profile-tab";
           } else {
             iconName = "location-outline";
+            testID = "default-tab";
           }
 
-          return <Ionicons name={iconName} size={size} color={color} />;
+          return (
+            <Ionicons
+              name={iconName}
+              size={size}
+              color={color}
+              testID={testID}
+            />
+          );
         },
         tabBarActiveTintColor: "#2ecc71",
         tabBarInactiveTintColor: "gray",

@@ -1,0 +1,60 @@
+appId: com.pacificknowledge.pereoonews
+env:
+  MAESTRO_TEST_EMAIL: ${MAESTRO_TEST_EMAIL || "testuser@pacificknowledge.dev"}
+  MAESTRO_TEST_PASSWORD: ${MAESTRO_TEST_PASSWORD || "ChangeMe1234*"}
+  EXPO_PUBLIC_TEST_MODE: "true"
+---
+- launchApp
+- assertVisible: "Connexion"
+- assertVisible: "Email"
+- assertVisible: "Mot de passe"
+- assertVisible: "Se connecter"
+- assertVisible: "S'inscrire"
+
+- waitForAnimationToEnd
+- tapOn:
+    id: "login-email-input"
+- inputText: ${MAESTRO_TEST_EMAIL}
+- tapOn:
+    id: "login-password-input"
+- inputText: ${MAESTRO_TEST_PASSWORD}
+- tapOn:
+    id: "login-button"
+
+# Navigate to Map screen
+- tapOn:
+    id: "map-tab"
+- waitForAnimationToEnd
+
+# Test Map screen functionality
+- assertVisible:
+    id: "map-screen"
+- assertVisible:
+    id: "center-on-user-location-button"
+# Note: Center button may not work if location permission is not granted
+# We'll just verify it's visible and skip the tap test
+
+# Test Add Address button on map
+- assertVisible:
+    id: "add-address-button"
+- tapOn:
+    id: "add-address-button"
+- waitForAnimationToEnd
+- assertVisible: ".*Créer une adresse.*"
+- assertVisible: ".*Nom de l'adresse.*"
+- assertVisible: ".*Description.*"
+- assertVisible: ".*Photos.*"
+- assertVisible:
+    id: "map-view"
+- swipe:
+    direction: DOWN
+
+# Logout
+- tapOn:
+    id: "profile-tab"
+- waitForAnimationToEnd
+- scroll
+- tapOn:
+    id: "logout-button"
+- tapOn: "Déconnexion"
+- waitForAnimationToEnd

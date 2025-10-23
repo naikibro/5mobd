@@ -107,6 +107,8 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
 
         <Animated.View style={{ transform: [{ translateY: emailAnim }] }}>
           <TextInput
+            id="login-email-input"
+            testID="login-email-input"
             style={styles.input}
             placeholder="Email"
             value={email}
@@ -119,6 +121,8 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
 
         <Animated.View style={{ transform: [{ translateY: passwordAnim }] }}>
           <TextInput
+            id="login-password-input"
+            testID="login-password-input"
             style={styles.input}
             placeholder="Mot de passe"
             value={password}
@@ -130,6 +134,8 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
 
         <Animated.View style={{ transform: [{ translateY: buttonAnim }] }}>
           <TouchableOpacity
+            id="login-button"
+            testID="login-button"
             style={[styles.button, authLoading && styles.buttonDisabled]}
             onPress={handleLogin}
             disabled={authLoading}

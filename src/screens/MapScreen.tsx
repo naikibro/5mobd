@@ -114,8 +114,7 @@ const MapScreen = () => {
         });
       }
     } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error("Error getting current location:", error);
+      console.log("Error getting current location:", error);
     } finally {
       setLoading(false);
     }
@@ -267,6 +266,7 @@ const MapScreen = () => {
         showsBuildings={true}
         showsTraffic={true}
         showsPointsOfInterest={true}
+        testID="map-screen"
       >
         {renderMarkers()}
       </MapView>
@@ -274,6 +274,7 @@ const MapScreen = () => {
       <TouchableOpacity
         style={styles.centerButton}
         onPress={centerOnUserLocation}
+        testID="center-on-user-location-button"
       >
         <Ionicons name="locate" size={24} color="#fff" />
       </TouchableOpacity>
@@ -283,6 +284,7 @@ const MapScreen = () => {
           <TouchableOpacity
             style={styles.fab}
             onPress={() => navigation.navigate("CreateAddress")}
+            testID="add-address-button"
           >
             <Ionicons name="add" size={24} color="#fff" />
           </TouchableOpacity>

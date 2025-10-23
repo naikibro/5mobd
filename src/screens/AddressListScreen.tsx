@@ -186,6 +186,7 @@ const AddressListScreen = () => {
         />
         <TextInput
           style={styles.searchInput}
+          testID="addresses-search-input"
           placeholder="Rechercher une adresse..."
           value={searchQuery}
           onChangeText={handleSearch}
@@ -224,6 +225,7 @@ const AddressListScreen = () => {
 
       <TouchableOpacity
         style={styles.fab}
+        testID="add-address-button"
         onPress={() => navigation.navigate("CreateAddress")}
       >
         <Ionicons name="add" size={24} color="#fff" />
