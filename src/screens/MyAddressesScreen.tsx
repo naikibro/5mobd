@@ -12,50 +12,50 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import PhotoGallery from "../components/PhotoGallery";
+import { useMyAddresses } from "../hooks/useMyAddresses";
 import { useAddressStore } from "../stores/addressStore";
-import { useAuthStore } from "../stores/authStore";
 import { Address } from "../types/address";
 
-const { width: _screenWidth } = Dimensions.get("window");
+const { width } = Dimensions.get("window");
 
 const MyAddressesScreen = () => {
+  const { deleteAddress } = useAddressStore();
   const {
-    fetchUserAddresses,
-    deleteAddress,
-    searchAddresses,
     loading,
-    addresses,
-    isPolling,
-  } = useAddressStore();
-  const { user } = useAuthStore();
+    loadMyAddresses,
+    searchMyAddresses,
+    getFilteredAddresses,
+    isUserCreated: checkIsUserCreated,
+    isFavoriteLocal,
+    refreshMyAddresses,
+  } = useMyAddresses();
+
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
-  const [filter, setFilter] = useState<"all" | "public" | "private">("all");
+  const [filter, setFilter] = useState<"all" | "created" | "favorites">("all");
 
+  // Refresh addresses when screen comes into focus
   useEffect(() => {
-    if (user) {
-      loadMyAddresses();
-    }
-  }, [user]);
+    const refreshOnFocus = () => {
+      refreshMyAddresses();
+    };
 
-  const loadMyAddresses = async () => {
-    if (!user) return;
+    // Refresh immediately
+    refreshOnFocus();
 
-    try {
-      await fetchUserAddresses(user.uid);
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error("Error loading my addresses:", error);
-    }
-  };
+    // Set up interval to refresh every 2 seconds when screen is active
+    const interval = setInterval(refreshOnFocus, 2000);
+
+    return () => clearInterval(interval);
+  }, [refreshMyAddresses]);
 
   const handleSearch = async (query: string) => {
     setSearchQuery(query);
     if (query.trim()) {
       setIsSearching(true);
       try {
-        await searchAddresses(query, filter, user?.uid);
-        // Note: The search results will be handled by the store
+        await searchMyAddresses(query);
       } catch (error) {
         // eslint-disable-next-line no-console
         console.error("Error searching addresses:", error);
@@ -63,11 +63,12 @@ const MyAddressesScreen = () => {
         setIsSearching(false);
       }
     } else {
+      // Reset to show all addresses
       loadMyAddresses();
     }
   };
 
-  const handleFilterChange = (newFilter: "all" | "public" | "private") => {
+  const handleFilterChange = (newFilter: "all" | "created" | "favorites") => {
     setFilter(newFilter);
     if (searchQuery.trim()) {
       handleSearch(searchQuery);
@@ -98,45 +99,63 @@ const MyAddressesScreen = () => {
     );
   };
 
-  const renderAddress = ({ item }: { item: Address }) => (
-    <View style={styles.item}>
-      <View style={styles.itemContent}>
-        <View style={styles.itemInfo}>
-          <Text style={styles.name}>{item.name}</Text>
-          <Text style={styles.description} numberOfLines={2}>
-            {item.description}
-          </Text>
-          <View style={styles.locationContainer}>
-            <Ionicons name="location" size={14} color="#666" />
-            <Text style={styles.location}>
-              {item.latitude.toFixed(4)}, {item.longitude.toFixed(4)}
+  const renderAddress = ({ item }: { item: Address }) => {
+    const isUserCreated = checkIsUserCreated(item);
+    const isFavorite = isFavoriteLocal(item.id);
+
+    return (
+      <View style={styles.item}>
+        <View style={styles.photosContainer}>
+          <PhotoGallery photos={item.photos || []} />
+        </View>
+        <View style={styles.itemContent}>
+          <View style={styles.itemInfo}>
+            <View style={styles.nameContainer}>
+              <Text style={styles.name}>{item.name}</Text>
+              {isUserCreated && (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>Créé</Text>
+                </View>
+              )}
+              {isFavorite && !isUserCreated && (
+                <View style={styles.favoriteBadge}>
+                  <Text style={styles.favoriteBadgeText}>⭐ Favori</Text>
+                </View>
+              )}
+            </View>
+            <Text style={styles.description} numberOfLines={2}>
+              {item.description}
             </Text>
+            <View style={styles.locationContainer}>
+              <Ionicons name="location" size={14} color="#666" />
+              <Text style={styles.location}>
+                {item.latitude.toFixed(4)}, {item.longitude.toFixed(4)}
+              </Text>
+            </View>
+          </View>
+          <View style={styles.itemActions}>
+            <Ionicons
+              name={item.isPublic ? "globe" : "lock-closed"}
+              size={20}
+              color={item.isPublic ? "#2ecc71" : "#e74c3c"}
+            />
+            {isUserCreated && (
+              <TouchableOpacity
+                style={styles.deleteButton}
+                onPress={() => handleDeleteAddress(item)}
+              >
+                <Ionicons name="trash" size={16} color="#e74c3c" />
+              </TouchableOpacity>
+            )}
           </View>
         </View>
-        <View style={styles.itemActions}>
-          <Ionicons
-            name={item.isPublic ? "globe" : "lock-closed"}
-            size={20}
-            color={item.isPublic ? "#2ecc71" : "#e74c3c"}
-          />
-          <TouchableOpacity
-            style={styles.deleteButton}
-            onPress={() => handleDeleteAddress(item)}
-          >
-            <Ionicons name="trash" size={16} color="#e74c3c" />
-          </TouchableOpacity>
-        </View>
       </View>
-    </View>
-  );
+    );
+  };
 
-  const filteredAddresses = addresses.filter((address) => {
-    if (filter === "public") return address.isPublic;
-    if (filter === "private") return !address.isPublic;
-    return true;
-  });
+  const filteredAddresses = getFilteredAddresses(filter);
 
-  if (loading && !isPolling && addresses.length === 0) {
+  if (loading && filteredAddresses.length === 0) {
     return (
       <View style={[styles.container, styles.centered]}>
         <Text>Chargement de vos adresses...</Text>
@@ -160,7 +179,7 @@ const MyAddressesScreen = () => {
           testID="my-addresses-search-input"
           onChangeText={handleSearch}
         />
-        {(isSearching || (loading && !isPolling)) && (
+        {(isSearching || loading) && (
           <ActivityIndicator size="small" color="#2ecc71" />
         )}
       </View>
@@ -186,48 +205,53 @@ const MyAddressesScreen = () => {
         <TouchableOpacity
           style={[
             styles.filterButton,
-            filter === "public" && styles.filterButtonActive,
+            filter === "created" && styles.filterButtonActive,
           ]}
-          onPress={() => handleFilterChange("public")}
-          testID="filter-public-button"
+          onPress={() => handleFilterChange("created")}
+          testID="filter-created-button"
         >
           <Text
             style={[
               styles.filterText,
-              filter === "public" && styles.filterTextActive,
+              filter === "created" && styles.filterTextActive,
             ]}
           >
-            Publiques
+            Créées
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[
             styles.filterButton,
-            filter === "private" && styles.filterButtonActive,
+            filter === "favorites" && styles.filterButtonActive,
           ]}
-          onPress={() => handleFilterChange("private")}
-          testID="filter-private-button"
+          onPress={() => handleFilterChange("favorites")}
+          testID="filter-favorites-button"
         >
           <Text
             style={[
               styles.filterText,
-              filter === "private" && styles.filterTextActive,
+              filter === "favorites" && styles.filterTextActive,
             ]}
           >
-            Privées
+            Favoris
           </Text>
         </TouchableOpacity>
       </View>
 
       <Text style={styles.title}>Mes adresses</Text>
       <Text style={styles.subtitle}>
-        Trouvez ici les adresses que vous avez créées
+        Trouvez ici les adresses que vous avez créées et vos favoris
       </Text>
       <FlatList
         data={filteredAddresses}
         renderItem={renderAddress}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
+        numColumns={Platform.select({ web: width > 768 ? 2 : 1, default: 1 })}
+        key={Platform.select({
+          web: width > 768 ? "two-columns" : "one-column",
+          default: "one-column",
+        })}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Ionicons name="location-outline" size={80} color="#bdc3c7" />
@@ -310,7 +334,7 @@ const styles = StyleSheet.create({
     paddingTop: 0,
     ...Platform.select({
       web: {
-        maxWidth: 800,
+        maxWidth: 1200,
         alignSelf: "center",
         width: "100%",
       },
@@ -320,7 +344,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderRadius: 8,
     marginBottom: 12,
-    padding: 16,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
@@ -329,11 +352,21 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 3.84,
     elevation: 5,
+    ...Platform.select({
+      web: {
+        flex: width > 768 ? 0.48 : 1,
+        marginHorizontal: width > 768 ? "1%" : 0,
+      },
+    }),
   },
   itemContent: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
+    padding: 16,
+  },
+  photosContainer: {
+    overflow: "hidden",
   },
   itemInfo: {
     flex: 1,
@@ -343,6 +376,35 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#333",
     marginBottom: 4,
+  },
+  nameContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 4,
+  },
+  badge: {
+    backgroundColor: "#3498db",
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 12,
+    marginLeft: 8,
+  },
+  badgeText: {
+    fontSize: 10,
+    color: "#fff",
+    fontWeight: "600",
+  },
+  favoriteBadge: {
+    backgroundColor: "#e74c3c",
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 12,
+    marginLeft: 8,
+  },
+  favoriteBadgeText: {
+    fontSize: 10,
+    color: "#fff",
+    fontWeight: "600",
   },
   description: {
     fontSize: 14,

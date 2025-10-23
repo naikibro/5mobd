@@ -5,6 +5,7 @@ import { Address, AddressWithReviews, Review } from "../types/address";
 interface AddressState {
   addresses: Address[];
   reviews: Review[];
+  favorites: string[];
   loading: boolean;
   error: string | null;
   pollingInterval: NodeJS.Timeout | null;
@@ -16,6 +17,9 @@ interface AddressState {
   fetchAddresses: () => Promise<void>;
   fetchUserAddresses: (userId: string) => Promise<void>;
   fetchPublicAddresses: () => Promise<void>;
+  fetchMapAddresses: (userId?: string) => Promise<void>;
+  fetchUserFavorites: (userId: string) => Promise<void>;
+  fetchUserFavoritesWithAddresses: (userId: string) => Promise<Address[]>;
   silentFetchAddresses: () => Promise<void>;
   silentFetchUserAddresses: (userId: string) => Promise<void>;
   silentFetchPublicAddresses: () => Promise<void>;
@@ -37,6 +41,9 @@ interface AddressState {
     visibility?: "all" | "public" | "private",
     userId?: string
   ) => Promise<Address[]>;
+  addToFavorites: (userId: string, addressId: string) => Promise<void>;
+  removeFromFavorites: (userId: string, addressId: string) => Promise<void>;
+  isFavorite: (userId: string, addressId: string) => Promise<boolean>;
   setError: (error: string | null) => void;
   setLoading: (loading: boolean) => void;
 }
@@ -44,6 +51,7 @@ interface AddressState {
 export const useAddressStore = create<AddressState>((set, get) => ({
   addresses: [],
   reviews: [],
+  favorites: [],
   loading: false,
   error: null,
   pollingInterval: null,
@@ -100,6 +108,41 @@ export const useAddressStore = create<AddressState>((set, get) => ({
       set({ addresses, loading: false });
     } catch (error: any) {
       set({ error: error.message, loading: false });
+      throw error;
+    }
+  },
+
+  fetchMapAddresses: async (userId?: string) => {
+    try {
+      set({ loading: true, error: null });
+      const addresses = await addressService.getMapAddresses(userId);
+      set({ addresses, loading: false });
+    } catch (error: any) {
+      set({ error: error.message, loading: false });
+      throw error;
+    }
+  },
+
+  fetchUserFavorites: async (userId: string) => {
+    try {
+      set({ error: null });
+      const favorites = await addressService.getUserFavorites(userId);
+      set({ favorites });
+    } catch (error: any) {
+      set({ error: error.message });
+      throw error;
+    }
+  },
+
+  fetchUserFavoritesWithAddresses: async (userId: string) => {
+    try {
+      set({ error: null });
+      const addresses = await addressService.getUserFavoritesWithAddresses(
+        userId
+      );
+      return addresses;
+    } catch (error: any) {
+      set({ error: error.message });
       throw error;
     }
   },
@@ -282,6 +325,44 @@ export const useAddressStore = create<AddressState>((set, get) => ({
         visibility,
         userId
       );
+    } catch (error: any) {
+      set({ error: error.message });
+      throw error;
+    }
+  },
+
+  addToFavorites: async (userId: string, addressId: string) => {
+    try {
+      set({ error: null });
+      await addressService.addToFavorites(userId, addressId);
+      // Update local favorites state
+      const { favorites } = get();
+      if (!favorites.includes(addressId)) {
+        set({ favorites: [...favorites, addressId] });
+      }
+    } catch (error: any) {
+      set({ error: error.message });
+      throw error;
+    }
+  },
+
+  removeFromFavorites: async (userId: string, addressId: string) => {
+    try {
+      set({ error: null });
+      await addressService.removeFromFavorites(userId, addressId);
+      // Update local favorites state
+      const { favorites } = get();
+      set({ favorites: favorites.filter((id) => id !== addressId) });
+    } catch (error: any) {
+      set({ error: error.message });
+      throw error;
+    }
+  },
+
+  isFavorite: async (userId: string, addressId: string) => {
+    try {
+      set({ error: null });
+      return await addressService.isFavorite(userId, addressId);
     } catch (error: any) {
       set({ error: error.message });
       throw error;

@@ -12,10 +12,13 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  Alert,
 } from "react-native";
 import PhotoGallery from "../components/PhotoGallery";
 import { useGeocoding } from "../hooks/useGeocoding";
+import { useFavorites } from "../hooks/useFavorites";
 import { useAddressStore } from "../stores/addressStore";
+import { addressService } from "../services/addressService";
 import { Address } from "../types/address";
 import { AddressStackParamList } from "../types/navigation";
 
@@ -24,33 +27,45 @@ const { width } = Dimensions.get("window");
 const AddressListScreen = () => {
   const navigation =
     useNavigation<NativeStackNavigationProp<AddressStackParamList>>();
-  const {
-    fetchPublicAddresses,
-    searchAddresses,
-    loading,
-    addresses,
-    isPolling,
-  } = useAddressStore();
+  const { loading, isPolling } = useAddressStore();
   const { getStreetName, isLoading: isGeocodingLoading } = useGeocoding();
+  const { toggleFavorite, isFavoriteLocal } = useFavorites();
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
+  const [addresses, setAddresses] = useState<Address[]>([]);
   const [streetNames, setStreetNames] = useState<Map<string, string>>(
     new Map()
   );
   const processedAddresses = useRef(new Set<string>());
 
-  useEffect(() => {
-    loadAddresses();
-  }, []);
-
   const loadAddresses = useCallback(async () => {
     try {
-      await fetchPublicAddresses();
+      const publicAddresses = await addressService.getPublicAddresses();
+      setAddresses(publicAddresses);
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error("Error loading addresses:", error);
     }
-  }, [fetchPublicAddresses]);
+  }, []);
+
+  useEffect(() => {
+    loadAddresses();
+  }, []);
+
+  // Refresh addresses when screen comes into focus
+  useEffect(() => {
+    const refreshOnFocus = () => {
+      loadAddresses();
+    };
+
+    // Refresh immediately
+    refreshOnFocus();
+
+    // Set up interval to refresh every 5 seconds to catch new public addresses
+    const interval = setInterval(refreshOnFocus, 5000);
+
+    return () => clearInterval(interval);
+  }, [loadAddresses]);
 
   const loadStreetNames = useCallback(async () => {
     if (addresses.length === 0) return;
@@ -108,8 +123,12 @@ const AddressListScreen = () => {
     if (query.trim()) {
       setIsSearching(true);
       try {
-        await searchAddresses(query, "public");
-        // Note: The search results will be handled by the store
+        // Search only in public addresses
+        const searchResults = await addressService.searchAddresses(
+          query,
+          "public"
+        );
+        setAddresses(searchResults);
       } catch (error) {
         // eslint-disable-next-line no-console
         console.error("Error searching addresses:", error);
@@ -124,6 +143,24 @@ const AddressListScreen = () => {
   const renderAddress = ({ item }: { item: Address }) => {
     const key = `${item.latitude},${item.longitude}`;
     const streetName = streetNames.get(key);
+    const isFavorite = isFavoriteLocal(item.id);
+
+    const handleFavoritePress = async () => {
+      try {
+        const wasFavorite = isFavorite;
+        await toggleFavorite(item.id);
+
+        // Show toast message
+        if (!wasFavorite) {
+          Alert.alert("⭐️", "Adresse ajoutée aux favoris⭐️", [], {
+            cancelable: true,
+          });
+        }
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error("Error toggling favorite:", error);
+      }
+    };
 
     return (
       <TouchableOpacity
@@ -155,6 +192,17 @@ const AddressListScreen = () => {
             </View>
           </View>
           <View style={styles.itemActions}>
+            <TouchableOpacity
+              style={styles.favoriteButton}
+              onPress={handleFavoritePress}
+              testID={`favorite-button-${item.id}`}
+            >
+              <Ionicons
+                name={isFavorite ? "star" : "star-outline"}
+                size={20}
+                color={isFavorite ? "#ffd700" : "#666"}
+              />
+            </TouchableOpacity>
             <Ionicons
               name={item.isPublic ? "globe" : "lock-closed"}
               size={20}
@@ -332,6 +380,12 @@ const styles = StyleSheet.create({
   },
   itemActions: {
     marginLeft: 12,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  favoriteButton: {
+    marginRight: 8,
+    padding: 4,
   },
   emptyContainer: {
     flex: 1,
