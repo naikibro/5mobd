@@ -157,6 +157,7 @@ const MyAddressesScreen = () => {
           style={styles.searchInput}
           placeholder="Rechercher dans mes adresses..."
           value={searchQuery}
+          testID="my-addresses-search-input"
           onChangeText={handleSearch}
         />
         {(isSearching || (loading && !isPolling)) && (
@@ -171,6 +172,7 @@ const MyAddressesScreen = () => {
             filter === "all" && styles.filterButtonActive,
           ]}
           onPress={() => handleFilterChange("all")}
+          testID="filter-all-button"
         >
           <Text
             style={[
@@ -187,6 +189,7 @@ const MyAddressesScreen = () => {
             filter === "public" && styles.filterButtonActive,
           ]}
           onPress={() => handleFilterChange("public")}
+          testID="filter-public-button"
         >
           <Text
             style={[
@@ -203,6 +206,7 @@ const MyAddressesScreen = () => {
             filter === "private" && styles.filterButtonActive,
           ]}
           onPress={() => handleFilterChange("private")}
+          testID="filter-private-button"
         >
           <Text
             style={[

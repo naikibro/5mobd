@@ -209,7 +209,11 @@ const ProfileScreen = () => {
         </TouchableOpacity>
       </View>
 
-      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+      <TouchableOpacity
+        style={styles.logoutButton}
+        onPress={handleLogout}
+        testID="logout-button"
+      >
         <Ionicons
           name="log-out"
           size={20}

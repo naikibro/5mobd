@@ -1,0 +1,43 @@
+appId: com.pacificknowledge.pereoonews
+env:
+  MAESTRO_TEST_EMAIL: ${MAESTRO_TEST_EMAIL || "testuser@pacificknowledge.dev"}
+  MAESTRO_TEST_PASSWORD: ${MAESTRO_TEST_PASSWORD || "ChangeMe1234*"}
+  EXPO_PUBLIC_TEST_MODE: "true"
+---
+- launchApp
+- assertVisible: "Connexion"
+- assertVisible: "Email"
+- assertVisible: "Mot de passe"
+- assertVisible: "Se connecter"
+- assertVisible: "S'inscrire"
+
+- waitForAnimationToEnd
+- tapOn:
+    id: "login-email-input"
+- inputText: ${MAESTRO_TEST_EMAIL}
+- tapOn:
+    id: "login-password-input"
+- inputText: ${MAESTRO_TEST_PASSWORD}
+- tapOn:
+    id: "login-button"
+
+# Navigate to Profile screen
+- tapOn:
+    id: "profile-tab"
+- waitForAnimationToEnd
+
+# Test Profile screen functionality
+- assertVisible: ".*Informations du profil.*"
+- assertVisible: "Mettre à jour le pseudo"
+- assertVisible: ".*Email.*"
+- assertVisible: "Mettre à jour l'email"
+- assertVisible: ".*Changer le mot de passe.*"
+- scroll
+- assertVisible: "Mettre à jour le mot de passe"
+- assertVisible: ".*Se déconnecter.*"
+
+# Logout
+- tapOn:
+    id: "logout-button"
+- tapOn: "Déconnexion"
+- waitForAnimationToEnd
