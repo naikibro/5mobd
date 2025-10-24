@@ -1,83 +1,59 @@
-import React, { useCallback, useRef, useState } from "react";
-import { View, Text, StyleSheet, PanResponder, Animated } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import React, { useState, useRef } from "react";
+import { StyleSheet, Text, View, PanResponder, Animated } from "react-native";
 
 interface RadiusSliderProps {
-  searchRadius: number;
-  onRadiusChange: (low: number, high: number, fromUser: boolean) => void;
+  initialValue: number;
+  onValueChange: (value: number) => void;
   addressesCount: number;
 }
 
 const RadiusSlider: React.FC<RadiusSliderProps> = ({
-  searchRadius,
-  onRadiusChange,
+  initialValue,
+  onValueChange,
   addressesCount,
 }) => {
-  const sliderWidth = 280; // Fixed width for the slider
   const minValue = 1;
   const maxValue = 20000;
+  const sliderWidth = 280;
 
-  // Use state to track the current position and display value
-  const [currentPosition, setCurrentPosition] = useState(
-    ((searchRadius - minValue) / (maxValue - minValue)) * sliderWidth
-  );
-  const [displayValue, setDisplayValue] = useState(searchRadius);
+  const [sliderValue, setSliderValue] = useState(initialValue);
+  const pan = useRef(
+    new Animated.Value(
+      ((initialValue - minValue) / (maxValue - minValue)) * sliderWidth
+    )
+  ).current;
 
-  const pan = useRef(new Animated.Value(currentPosition)).current;
-
-  // Calculate the position based on current radius
-  const getPositionFromValue = useCallback((value: number) => {
-    return ((value - minValue) / (maxValue - minValue)) * sliderWidth;
-  }, []);
-
-  const getValueFromPosition = useCallback((position: number) => {
+  const getValueFromPosition = (position: number) => {
     const ratio = Math.max(0, Math.min(1, position / sliderWidth));
     return Math.round(minValue + ratio * (maxValue - minValue));
-  }, []);
+  };
 
-  // Update position when searchRadius changes externally
-  React.useEffect(() => {
-    const newPosition = getPositionFromValue(searchRadius);
-    setCurrentPosition(newPosition);
-    setDisplayValue(searchRadius);
-    Animated.timing(pan, {
-      toValue: newPosition,
-      duration: 100,
-      useNativeDriver: false,
-    }).start();
-  }, [searchRadius, pan, getPositionFromValue]);
+  const updateSlider = (position: number) => {
+    const newValue = getValueFromPosition(position);
+    pan.setValue(position);
+    setSliderValue(newValue);
+    onValueChange(newValue);
+  };
 
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: () => true,
-      onPanResponderGrant: () => {
-        // Start from current position
-        pan.setValue(currentPosition);
+      onPanResponderGrant: (evt) => {
+        const touchX = evt.nativeEvent.locationX;
+        const newPosition = Math.max(0, Math.min(sliderWidth, touchX));
+        updateSlider(newPosition);
       },
-      onPanResponderMove: (_, gestureState) => {
-        const newPosition = Math.max(
-          0,
-          Math.min(sliderWidth, currentPosition + gestureState.dx)
-        );
-        pan.setValue(newPosition);
-
-        // Update display value in real-time
-        const newValue = getValueFromPosition(newPosition);
-        setDisplayValue(newValue);
+      onPanResponderMove: (evt) => {
+        const touchX = evt.nativeEvent.locationX;
+        const newPosition = Math.max(0, Math.min(sliderWidth, touchX));
+        updateSlider(newPosition);
       },
-      onPanResponderRelease: (_, gestureState) => {
-        const finalPosition = Math.max(
-          0,
-          Math.min(sliderWidth, currentPosition + gestureState.dx)
-        );
-        const newValue = getValueFromPosition(finalPosition);
-
-        setCurrentPosition(finalPosition);
-
-        if (newValue !== searchRadius) {
-          onRadiusChange(newValue, 0, true);
-        }
+      onPanResponderRelease: (evt) => {
+        const touchX = evt.nativeEvent.locationX;
+        const newPosition = Math.max(0, Math.min(sliderWidth, touchX));
+        updateSlider(newPosition);
       },
     })
   ).current;
@@ -87,10 +63,11 @@ const RadiusSlider: React.FC<RadiusSliderProps> = ({
       <View style={styles.radiusHeader}>
         <Ionicons name="location" size={16} color="#2ecc71" />
         <Text style={styles.radiusLabel}>Rayon de recherche</Text>
-        <Text style={styles.radiusValue}>{displayValue} km</Text>
+        <Text style={styles.radiusValue}>{sliderValue} km</Text>
       </View>
+
       <View style={styles.sliderContainer}>
-        <View style={styles.sliderTrack}>
+        <View style={styles.sliderTrack} {...panResponder.panHandlers}>
           <Animated.View
             style={[
               styles.sliderTrackActive,
@@ -118,10 +95,10 @@ const RadiusSlider: React.FC<RadiusSliderProps> = ({
                 ],
               },
             ]}
-            {...panResponder.panHandlers}
           />
         </View>
       </View>
+
       <View style={styles.radiusRange}>
         <Text style={styles.rangeText}>1 km</Text>
         <Text style={styles.rangeText}>20,000 km</Text>
@@ -159,21 +136,22 @@ const styles = StyleSheet.create({
   },
   sliderContainer: {
     width: "100%",
-    height: 40,
+    height: 50,
     justifyContent: "center",
     alignItems: "center",
+    marginBottom: 12,
   },
   sliderTrack: {
     width: 280,
-    height: 4,
+    height: 8,
     backgroundColor: "#e0e0e0",
-    borderRadius: 2,
+    borderRadius: 4,
     position: "relative",
   },
   sliderTrackActive: {
-    height: 4,
+    height: 8,
     backgroundColor: "#2ecc71",
-    borderRadius: 2,
+    borderRadius: 4,
     position: "absolute",
     left: 0,
     top: 0,
@@ -184,7 +162,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#2ecc71",
     borderRadius: 10,
     position: "absolute",
-    top: -8,
+    top: -6,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,

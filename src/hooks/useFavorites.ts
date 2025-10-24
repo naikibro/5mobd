@@ -124,6 +124,9 @@ export const useFavorites = () => {
     removeFromFavorites: removeFromFavoritesHandler,
     isFavorite: checkIsFavorite,
     toggleFavorite,
-    isFavoriteLocal: (addressId: string) => favorites.includes(addressId),
+    isFavoriteLocal: useCallback(
+      (addressId: string) => favorites.includes(addressId),
+      [favorites]
+    ),
   };
 };
