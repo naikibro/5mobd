@@ -15,6 +15,7 @@ import {
   Alert,
 } from "react-native";
 import PhotoGallery from "../components/PhotoGallery";
+import RadiusSlider from "../components/RadiusSlider";
 import { useGeocoding } from "../hooks/useGeocoding";
 import { useFavorites } from "../hooks/useFavorites";
 import { useAddressStore } from "../stores/addressStore";
@@ -39,6 +40,7 @@ const AddressListScreen = () => {
   );
   const [userLocation, setUserLocation] =
     useState<Location.LocationObject | null>(null);
+  const [searchRadius, setSearchRadius] = useState<number>(30); // Default 30km radius
   const processedAddresses = useRef(new Set<string>());
 
   // Get user location on mount
@@ -116,13 +118,14 @@ const AddressListScreen = () => {
           userLocation.coords
         );
         const filteredAddresses = await addressService.searchAddresses(
-          "", // Empty search query to get all addresses
+          searchQuery, // Use current search query
           "public",
           undefined,
           {
             latitude: userLocation.coords.latitude,
             longitude: userLocation.coords.longitude,
-          }
+          },
+          searchRadius
         );
         console.log(
           "Filtered addresses (within 30km):",
@@ -137,7 +140,7 @@ const AddressListScreen = () => {
       // eslint-disable-next-line no-console
       console.error("Error loading addresses:", error);
     }
-  }, [userLocation]);
+  }, [userLocation, searchRadius, searchQuery]);
 
   useEffect(() => {
     loadAddresses();
@@ -221,7 +224,8 @@ const AddressListScreen = () => {
                 latitude: userLocation.coords.latitude,
                 longitude: userLocation.coords.longitude,
               }
-            : undefined
+            : undefined,
+          searchRadius
         );
         setAddresses(searchResults);
       } catch (error) {
@@ -234,6 +238,17 @@ const AddressListScreen = () => {
       loadAddresses();
     }
   };
+
+  const handleRadiusChange = useCallback(
+    async (low: number, high: number, fromUser: boolean) => {
+      // Only update if it's from user interaction OR if the value is actually different
+      if (fromUser || low !== searchRadius) {
+        setSearchRadius(low);
+        // loadAddresses will be called automatically due to searchRadius dependency
+      }
+    },
+    [searchRadius]
+  );
 
   const renderAddress = ({ item }: { item: Address }) => {
     const key = `${item.latitude},${item.longitude}`;
@@ -349,6 +364,13 @@ const AddressListScreen = () => {
           web: width > 768 ? "two-columns" : "one-column",
           default: "one-column",
         })}
+        ListHeaderComponent={() => (
+          <RadiusSlider
+            searchRadius={searchRadius}
+            onRadiusChange={handleRadiusChange}
+            addressesCount={addresses.length}
+          />
+        )}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Ionicons name="location-outline" size={80} color="#bdc3c7" />

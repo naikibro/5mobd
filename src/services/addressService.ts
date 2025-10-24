@@ -266,7 +266,8 @@ class AddressService {
     searchQuery: string,
     visibility: "all" | "public" | "private" = "all",
     userId?: string,
-    userLocation?: { latitude: number; longitude: number }
+    userLocation?: { latitude: number; longitude: number },
+    maxDistanceKm: number = 30
   ): Promise<Address[]> {
     let q = query(collection(db, "addresses"));
 
@@ -297,7 +298,7 @@ class AddressService {
 
     // Filter by distance if user location is provided
     if (userLocation) {
-      results = this.filterByDistance(results, userLocation, 30);
+      results = this.filterByDistance(results, userLocation, maxDistanceKm);
     }
 
     return results.sort(
