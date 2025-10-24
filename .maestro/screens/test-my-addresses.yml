@@ -27,11 +27,11 @@ env:
 - waitForAnimationToEnd
 
 # Test My Addresses screen functionality
-- assertVisible: ".*Mes adresses.*"
-- assertVisible: ".*Toutes.*"
-- assertVisible: ".*Publiques.*"
-- assertVisible: ".*Privées.*"
-- assertVisible: ".*Trouvez ici les adresses que vous avez créées.*"
+- assertVisible: "Mes adresses"
+- assertVisible: "Toutes"
+- assertVisible: "Créées"
+- assertVisible: "Favoris"
+- assertVisible: "Trouvez ici les adresses que vous avez créées et vos favoris"
 - assertVisible:
     id: "my-addresses-search-input"
 

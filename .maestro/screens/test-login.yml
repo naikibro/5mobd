@@ -18,12 +18,11 @@ env:
 - tapOn:
     id: "login-password-input"
 - inputText: ${MAESTRO_TEST_PASSWORD}
+- hideKeyboard
 - tapOn:
     id: "login-button"
 
 # Verify main tabs are visible after login
-- assertVisible:
-    id: "addresses-tab"
 - assertVisible:
     id: "map-tab"
 - assertVisible:

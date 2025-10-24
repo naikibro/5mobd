@@ -15,6 +15,7 @@ import ProfilePhotoPicker from "../components/ProfilePhotoPicker";
 
 const { width: _screenWidth } = Dimensions.get("window");
 import { useAuthStore } from "../stores/authStore";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const ProfileScreen = () => {
   const {
@@ -125,104 +126,109 @@ const ProfileScreen = () => {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <ProfilePhotoPicker
-        currentPhotoUrl={userProfile?.photoURL || user?.photoURL || undefined}
-        onPhotoChange={handlePhotoChange}
-        userId={user?.uid || ""}
-      />
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>
-          <Ionicons name="person" size={18} color="#333" /> Informations du
-          profil
-        </Text>
-
-        <Text style={styles.label}>Pseudo</Text>
-        <TextInput
-          style={styles.input}
-          value={displayName}
-          onChangeText={setDisplayName}
-          placeholder="Votre pseudo"
-        />
-        <TouchableOpacity
-          style={[styles.button, loading && styles.buttonDisabled]}
-          onPress={handleUpdateProfile}
-          disabled={loading}
-        >
-          <Text style={styles.buttonText}>Mettre à jour le pseudo</Text>
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>
-          <Ionicons name="mail" size={18} color="#333" /> Email
-        </Text>
-
-        <Text style={styles.label}>Adresse email</Text>
-        <TextInput
-          style={styles.input}
-          value={email}
-          onChangeText={setEmail}
-          placeholder="Votre email"
-          keyboardType="email-address"
-          autoCapitalize="none"
-        />
-        <TouchableOpacity
-          style={[styles.button, loading && styles.buttonDisabled]}
-          onPress={handleUpdateEmail}
-          disabled={loading}
-        >
-          <Text style={styles.buttonText}>Mettre à jour l'email</Text>
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>
-          <Ionicons name="lock-closed" size={18} color="#333" /> Changer le mot
-          de passe
-        </Text>
-
-        <Text style={styles.label}>Nouveau mot de passe</Text>
-        <TextInput
-          style={styles.input}
-          value={newPassword}
-          onChangeText={setNewPassword}
-          placeholder="Nouveau mot de passe"
-          secureTextEntry
-        />
-
-        <Text style={styles.label}>Confirmer le mot de passe</Text>
-        <TextInput
-          style={styles.input}
-          value={confirmPassword}
-          onChangeText={setConfirmPassword}
-          placeholder="Confirmer le mot de passe"
-          secureTextEntry
-        />
-        <TouchableOpacity
-          style={[styles.button, loading && styles.buttonDisabled]}
-          onPress={handleUpdatePassword}
-          disabled={loading}
-        >
-          <Text style={styles.buttonText}>Mettre à jour le mot de passe</Text>
-        </TouchableOpacity>
-      </View>
-
-      <TouchableOpacity
-        style={styles.logoutButton}
-        onPress={handleLogout}
-        testID="logout-button"
+    <SafeAreaView edges={["top"]} style={styles.container}>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
       >
-        <Ionicons
-          name="log-out"
-          size={20}
-          color="#fff"
-          style={{ marginRight: 8 }}
+        <ProfilePhotoPicker
+          currentPhotoUrl={userProfile?.photoURL || user?.photoURL || undefined}
+          onPhotoChange={handlePhotoChange}
+          userId={user?.uid || ""}
         />
-        <Text style={styles.logoutButtonText}>Se déconnecter</Text>
-      </TouchableOpacity>
-    </ScrollView>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>
+            <Ionicons name="person" size={18} color="#333" /> Informations du
+            profil
+          </Text>
+
+          <Text style={styles.label}>Pseudo</Text>
+          <TextInput
+            style={styles.input}
+            value={displayName}
+            onChangeText={setDisplayName}
+            placeholder="Votre pseudo"
+          />
+          <TouchableOpacity
+            style={[styles.button, loading && styles.buttonDisabled]}
+            onPress={handleUpdateProfile}
+            disabled={loading}
+          >
+            <Text style={styles.buttonText}>Mettre à jour le pseudo</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>
+            <Ionicons name="mail" size={18} color="#333" /> Email
+          </Text>
+
+          <Text style={styles.label}>Adresse email</Text>
+          <TextInput
+            style={styles.input}
+            value={email}
+            onChangeText={setEmail}
+            placeholder="Votre email"
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
+          <TouchableOpacity
+            style={[styles.button, loading && styles.buttonDisabled]}
+            onPress={handleUpdateEmail}
+            disabled={loading}
+          >
+            <Text style={styles.buttonText}>Mettre à jour l'email</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>
+            <Ionicons name="lock-closed" size={18} color="#333" /> Changer le
+            mot de passe
+          </Text>
+
+          <Text style={styles.label}>Nouveau mot de passe</Text>
+          <TextInput
+            style={styles.input}
+            value={newPassword}
+            onChangeText={setNewPassword}
+            placeholder="Nouveau mot de passe"
+            secureTextEntry
+          />
+
+          <Text style={styles.label}>Confirmer le mot de passe</Text>
+          <TextInput
+            style={styles.input}
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
+            placeholder="Confirmer le mot de passe"
+            secureTextEntry
+          />
+          <TouchableOpacity
+            style={[styles.button, loading && styles.buttonDisabled]}
+            onPress={handleUpdatePassword}
+            disabled={loading}
+          >
+            <Text style={styles.buttonText}>Mettre à jour le mot de passe</Text>
+          </TouchableOpacity>
+        </View>
+
+        <TouchableOpacity
+          style={styles.logoutButton}
+          onPress={handleLogout}
+          testID="logout-button"
+        >
+          <Ionicons
+            name="log-out"
+            size={20}
+            color="#fff"
+            style={{ marginRight: 8 }}
+          />
+          <Text style={styles.logoutButtonText}>Se déconnecter</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 

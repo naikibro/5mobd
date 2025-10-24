@@ -2,72 +2,92 @@ import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
-  FlatList,
   TouchableOpacity,
   StyleSheet,
   Alert,
-  Platform,
-  Dimensions,
   TextInput,
   ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useAddressStore } from "../stores/addressStore";
-import { useAuthStore } from "../stores/authStore";
+import AddressList from "../components/AddressList";
+import { useMyAddresses } from "../hooks/useMyAddresses";
+import { useFavorites } from "../hooks/useFavorites";
 import { Address } from "../types/address";
-
-const { width: _screenWidth } = Dimensions.get("window");
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const MyAddressesScreen = () => {
+  const { toggleFavorite, isFavoriteLocal } = useFavorites();
   const {
-    fetchUserAddresses,
-    deleteAddress,
-    searchAddresses,
     loading,
-    addresses,
-    isPolling,
-  } = useAddressStore();
-  const { user } = useAuthStore();
+    loadMyAddresses,
+    searchMyAddresses,
+    getFilteredAddresses,
+    refreshMyAddresses,
+  } = useMyAddresses();
+
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
-  const [filter, setFilter] = useState<"all" | "public" | "private">("all");
+  const [filter, setFilter] = useState<"all" | "created" | "favorites">("all");
+  const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(
+    null
+  );
 
+  // Refresh addresses when screen comes into focus
   useEffect(() => {
-    if (user) {
-      loadMyAddresses();
-    }
-  }, [user]);
+    const refreshOnFocus = () => {
+      refreshMyAddresses();
+    };
 
-  const loadMyAddresses = async () => {
-    if (!user) return;
+    // Refresh immediately
+    refreshOnFocus();
 
-    try {
-      await fetchUserAddresses(user.uid);
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error("Error loading my addresses:", error);
-    }
-  };
+    // Set up interval to refresh every 30 seconds when screen is active (reduced from 2 seconds)
+    const interval = setInterval(refreshOnFocus, 30000);
+
+    return () => clearInterval(interval);
+  }, [refreshMyAddresses]);
+
+  // Cleanup search timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (searchTimeout) {
+        clearTimeout(searchTimeout);
+      }
+    };
+  }, [searchTimeout]);
 
   const handleSearch = async (query: string) => {
     setSearchQuery(query);
+
+    // Clear existing timeout
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
+    }
+
     if (query.trim()) {
       setIsSearching(true);
-      try {
-        await searchAddresses(query, filter, user?.uid);
-        // Note: The search results will be handled by the store
-      } catch (error) {
-        // eslint-disable-next-line no-console
-        console.error("Error searching addresses:", error);
-      } finally {
-        setIsSearching(false);
-      }
+
+      // Debounce search by 500ms
+      const timeout = setTimeout(async () => {
+        try {
+          await searchMyAddresses(query);
+        } catch (error) {
+          // eslint-disable-next-line no-console
+          console.error("Error searching addresses:", error);
+        } finally {
+          setIsSearching(false);
+        }
+      }, 500);
+
+      setSearchTimeout(timeout);
     } else {
+      // Reset to show all addresses immediately
+      setIsSearching(false);
       loadMyAddresses();
     }
   };
 
-  const handleFilterChange = (newFilter: "all" | "public" | "private") => {
+  const handleFilterChange = (newFilter: "all" | "created" | "favorites") => {
     setFilter(newFilter);
     if (searchQuery.trim()) {
       handleSearch(searchQuery);
@@ -76,175 +96,131 @@ const MyAddressesScreen = () => {
     }
   };
 
-  const handleDeleteAddress = (address: Address) => {
+  const handleAddressPress = (address: Address) => {
+    // For now, we'll just show an alert. In the future, this could navigate to a details screen
     Alert.alert(
-      "Supprimer l'adresse",
-      `Voulez-vous supprimer "${address.name}" ?`,
-      [
-        { text: "Annuler", style: "cancel" },
-        {
-          text: "Supprimer",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await deleteAddress(address.id);
-              Alert.alert("Succès", "Adresse supprimée avec succès");
-            } catch (error: any) {
-              Alert.alert("Erreur", error.message);
-            }
-          },
-        },
-      ]
+      "Détails de l'adresse",
+      `${address.name}\n\n${
+        address.description
+      }\n\nCoordonnées: ${address.latitude.toFixed(
+        4
+      )}, ${address.longitude.toFixed(4)}`,
+      [{ text: "OK" }]
     );
   };
 
-  const renderAddress = ({ item }: { item: Address }) => (
-    <View style={styles.item}>
-      <View style={styles.itemContent}>
-        <View style={styles.itemInfo}>
-          <Text style={styles.name}>{item.name}</Text>
-          <Text style={styles.description} numberOfLines={2}>
-            {item.description}
-          </Text>
-          <View style={styles.locationContainer}>
-            <Ionicons name="location" size={14} color="#666" />
-            <Text style={styles.location}>
-              {item.latitude.toFixed(4)}, {item.longitude.toFixed(4)}
-            </Text>
-          </View>
-        </View>
-        <View style={styles.itemActions}>
-          <Ionicons
-            name={item.isPublic ? "globe" : "lock-closed"}
-            size={20}
-            color={item.isPublic ? "#2ecc71" : "#e74c3c"}
-          />
-          <TouchableOpacity
-            style={styles.deleteButton}
-            onPress={() => handleDeleteAddress(item)}
-          >
-            <Ionicons name="trash" size={16} color="#e74c3c" />
-          </TouchableOpacity>
-        </View>
-      </View>
-    </View>
-  );
+  const handleFavoritePress = async (addressId: string) => {
+    try {
+      await toggleFavorite(addressId);
+    } catch (error) {
+      console.error("Error toggling favorite:", error);
+    }
+  };
 
-  const filteredAddresses = addresses.filter((address) => {
-    if (filter === "public") return address.isPublic;
-    if (filter === "private") return !address.isPublic;
-    return true;
-  });
+  const filteredAddresses = getFilteredAddresses(filter);
 
-  if (loading && !isPolling && addresses.length === 0) {
+  if (loading && filteredAddresses.length === 0 && !isSearching) {
     return (
-      <View style={[styles.container, styles.centered]}>
-        <Text>Chargement de vos adresses...</Text>
-      </View>
+      <SafeAreaView edges={["top"]} style={styles.container}>
+        <View style={[styles.container, styles.centered]}>
+          <ActivityIndicator size="large" color="#2ecc71" />
+          <Text style={{ marginTop: 16, color: "#666" }}>
+            Chargement de vos adresses...
+          </Text>
+        </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.searchContainer}>
-        <Ionicons
-          name="search"
-          size={20}
-          color="#666"
-          style={styles.searchIcon}
-        />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Rechercher dans mes adresses..."
-          value={searchQuery}
-          testID="my-addresses-search-input"
-          onChangeText={handleSearch}
-        />
-        {(isSearching || (loading && !isPolling)) && (
-          <ActivityIndicator size="small" color="#2ecc71" />
-        )}
-      </View>
+    <SafeAreaView edges={["top"]} style={styles.container}>
+      <View style={styles.container}>
+        <View style={styles.searchContainer}>
+          <Ionicons
+            name="search"
+            size={20}
+            color="#666"
+            style={styles.searchIcon}
+          />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Rechercher dans mes adresses..."
+            value={searchQuery}
+            testID="my-addresses-search-input"
+            onChangeText={handleSearch}
+          />
+          {isSearching && <ActivityIndicator size="small" color="#2ecc71" />}
+        </View>
 
-      <View style={styles.filterContainer}>
-        <TouchableOpacity
-          style={[
-            styles.filterButton,
-            filter === "all" && styles.filterButtonActive,
-          ]}
-          onPress={() => handleFilterChange("all")}
-          testID="filter-all-button"
-        >
-          <Text
+        <View style={styles.filterContainer}>
+          <TouchableOpacity
             style={[
-              styles.filterText,
-              filter === "all" && styles.filterTextActive,
+              styles.filterButton,
+              filter === "all" && styles.filterButtonActive,
             ]}
+            onPress={() => handleFilterChange("all")}
+            testID="filter-all-button"
           >
-            Toutes
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.filterButton,
-            filter === "public" && styles.filterButtonActive,
-          ]}
-          onPress={() => handleFilterChange("public")}
-          testID="filter-public-button"
-        >
-          <Text
+            <Text
+              style={[
+                styles.filterText,
+                filter === "all" && styles.filterTextActive,
+              ]}
+            >
+              Toutes
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
             style={[
-              styles.filterText,
-              filter === "public" && styles.filterTextActive,
+              styles.filterButton,
+              filter === "created" && styles.filterButtonActive,
             ]}
+            onPress={() => handleFilterChange("created")}
+            testID="filter-created-button"
           >
-            Publiques
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.filterButton,
-            filter === "private" && styles.filterButtonActive,
-          ]}
-          onPress={() => handleFilterChange("private")}
-          testID="filter-private-button"
-        >
-          <Text
+            <Text
+              style={[
+                styles.filterText,
+                filter === "created" && styles.filterTextActive,
+              ]}
+            >
+              Créées
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
             style={[
-              styles.filterText,
-              filter === "private" && styles.filterTextActive,
+              styles.filterButton,
+              filter === "favorites" && styles.filterButtonActive,
             ]}
+            onPress={() => handleFilterChange("favorites")}
+            testID="filter-favorites-button"
           >
-            Privées
-          </Text>
-        </TouchableOpacity>
-      </View>
+            <Text
+              style={[
+                styles.filterText,
+                filter === "favorites" && styles.filterTextActive,
+              ]}
+            >
+              Favoris
+            </Text>
+          </TouchableOpacity>
+        </View>
 
-      <Text style={styles.title}>Mes adresses</Text>
-      <Text style={styles.subtitle}>
-        Trouvez ici les adresses que vous avez créées
-      </Text>
-      <FlatList
-        data={filteredAddresses}
-        renderItem={renderAddress}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.list}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Ionicons name="location-outline" size={80} color="#bdc3c7" />
-            <Text style={styles.emptyText}>
-              {searchQuery
-                ? "Aucune adresse trouvée"
-                : "Vous n'avez pas encore d'adresses"}
-            </Text>
-            <Text style={styles.emptySubtext}>
-              {searchQuery
-                ? "Essayez avec d'autres mots-clés"
-                : "Créez votre première adresse"}
-            </Text>
-          </View>
-        }
-      />
-    </View>
+        <Text style={styles.title}>Mes adresses</Text>
+        <Text style={styles.subtitle}>
+          Trouvez ici les adresses que vous avez créées et vos favoris
+        </Text>
+        <AddressList
+          addresses={filteredAddresses}
+          streetNames={new Map()} // Empty map since we don't need street names for my addresses
+          isGeocodingLoading={false}
+          onAddressPress={handleAddressPress}
+          onFavoritePress={handleFavoritePress}
+          isFavorite={isFavoriteLocal}
+          searchQuery={searchQuery}
+        />
+      </View>
+    </SafeAreaView>
   );
 };
 
@@ -304,89 +280,6 @@ const styles = StyleSheet.create({
   filterTextActive: {
     color: "#fff",
     fontWeight: "600",
-  },
-  list: {
-    padding: 16,
-    paddingTop: 0,
-    ...Platform.select({
-      web: {
-        maxWidth: 800,
-        alignSelf: "center",
-        width: "100%",
-      },
-    }),
-  },
-  item: {
-    backgroundColor: "#fff",
-    borderRadius: 8,
-    marginBottom: 12,
-    padding: 16,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  itemContent: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-  },
-  itemInfo: {
-    flex: 1,
-  },
-  name: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#333",
-    marginBottom: 4,
-  },
-  description: {
-    fontSize: 14,
-    color: "#666",
-    marginBottom: 8,
-    lineHeight: 20,
-  },
-  locationContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  location: {
-    fontSize: 12,
-    color: "#666",
-    marginLeft: 4,
-  },
-  itemActions: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginLeft: 12,
-  },
-  deleteButton: {
-    marginLeft: 12,
-    padding: 4,
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingVertical: 60,
-  },
-  emptyText: {
-    fontSize: 20,
-    fontWeight: "600",
-    color: "#666",
-    marginTop: 16,
-    marginBottom: 8,
-    textAlign: "center",
-  },
-  emptySubtext: {
-    fontSize: 16,
-    color: "#999",
-    textAlign: "center",
-    paddingHorizontal: 32,
   },
   title: {
     fontSize: 24,

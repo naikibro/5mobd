@@ -1,30 +1,35 @@
-import React, { useState, useEffect, useRef } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Alert,
-  Platform,
-  Dimensions,
-  ActivityIndicator,
-  Animated,
-} from "react-native";
-import MapView, { Marker, Region } from "react-native-maps";
-import * as Location from "expo-location";
 import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import * as Location from "expo-location";
+import React, {
+  useEffect,
+  useRef,
+  useState,
+  useCallback,
+  useMemo,
+} from "react";
+import {
+  Alert,
+  Animated,
+  Dimensions,
+  Platform,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import MapView, { Circle, Marker, Region } from "react-native-maps";
+import AddressDrawer from "../components/AddressDrawer";
 import { useAddressStore } from "../stores/addressStore";
 import { useAuthStore } from "../stores/authStore";
 import { Address, AddressWithReviews } from "../types/address";
-import AddressDetailsModal from "../components/AddressDetailsModal";
-import { useNavigation } from "@react-navigation/native";
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../types/navigation";
 
 const { width, height } = Dimensions.get("window");
 
 const MapScreen = () => {
-  const { fetchPublicAddresses, getAddressWithReviews, addresses } =
+  const { fetchMapAddresses, getAddressWithReviews, addresses } =
     useAddressStore();
   const { user } = useAuthStore();
   const navigation =
@@ -32,15 +37,20 @@ const MapScreen = () => {
   const [location, setLocation] = useState<Location.LocationObject | null>(
     null
   );
-  const [loading, setLoading] = useState(true);
+  const [_loading, setLoading] = useState(true);
   const [permissionStatus, setPermissionStatus] = useState<string>("");
   const [selectedAddress, setSelectedAddress] =
     useState<AddressWithReviews | null>(null);
-  const [modalVisible, setModalVisible] = useState(false);
+  const [mapRegion, setMapRegion] = useState<Region | null>(null);
+  const [allowedRegion, setAllowedRegion] = useState<Region | null>(null);
+  const [showSnackbar, setShowSnackbar] = useState<boolean>(false);
+  const [showDrawer, setShowDrawer] = useState<boolean>(false);
+  const [isProcessingMarker, setIsProcessingMarker] = useState(false);
   const mapRef = useRef<MapView>(null);
   const rainbowAnimation = useRef(new Animated.Value(0)).current;
+  const snackbarAnimation = useRef(new Animated.Value(0)).current;
 
-  const getInitialRegion = (): Region => {
+  const getInitialRegion = useCallback((): Region => {
     if (location) {
       return {
         latitude: location.coords.latitude,
@@ -56,6 +66,66 @@ const MapScreen = () => {
       latitudeDelta: 0.0922,
       longitudeDelta: 0.0421,
     };
+  }, [location]);
+
+  // Calculate allowed region with 70km radius
+  const calculateAllowedRegion = (userLat: number, userLon: number): Region => {
+    // Convert 70km to degrees (approximate)
+    // 1 degree latitude ≈ 111km
+    // 1 degree longitude ≈ 111km * cos(latitude)
+    const latDelta = 70 / 111; // ~0.63 degrees
+    const lonDelta = 70 / (111 * Math.cos((userLat * Math.PI) / 180)); // Adjust for latitude
+
+    return {
+      latitude: userLat,
+      longitude: userLon,
+      latitudeDelta: latDelta,
+      longitudeDelta: lonDelta,
+    };
+  };
+
+  // Check if a region is within the allowed bounds
+  const isRegionAllowed = (region: Region): boolean => {
+    if (!allowedRegion) return true;
+
+    const latDiff = Math.abs(region.latitude - allowedRegion.latitude);
+    const lonDiff = Math.abs(region.longitude - allowedRegion.longitude);
+
+    // Check if the region center is within the allowed bounds
+    const maxLatDiff = allowedRegion.latitudeDelta / 2;
+    const maxLonDiff = allowedRegion.longitudeDelta / 2;
+
+    return latDiff <= maxLatDiff && lonDiff <= maxLonDiff;
+  };
+
+  // Handle region change and enforce geofencing
+  const handleRegionChange = (region: Region) => {
+    if (isRegionAllowed(region)) {
+      setMapRegion(region);
+    } else {
+      // Show snackbar notification
+      setShowSnackbar(true);
+      Animated.timing(snackbarAnimation, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+
+      setTimeout(() => {
+        Animated.timing(snackbarAnimation, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }).start(() => {
+          setShowSnackbar(false);
+        });
+      }, 4000); // Hide snackbar after 4 seconds
+
+      // Snap back to the allowed region
+      if (mapRef.current && allowedRegion) {
+        mapRef.current.animateToRegion(allowedRegion, 1000);
+      }
+    }
   };
 
   useEffect(() => {
@@ -76,6 +146,15 @@ const MapScreen = () => {
     startRainbowAnimation();
   }, [rainbowAnimation]);
 
+  // Set allowed region for simulator fallback
+  useEffect(() => {
+    if (!allowedRegion && !location) {
+      // Set Paris as fallback with 70km radius
+      const parisAllowed = calculateAllowedRegion(48.8566, 2.3522);
+      setAllowedRegion(parisAllowed);
+    }
+  }, [allowedRegion, location]);
+
   const getLocationPermission = async () => {
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
@@ -92,7 +171,7 @@ const MapScreen = () => {
       }
     } catch (error) {
       // eslint-disable-next-line no-console
-      console.error("Error getting location permission:", error);
+      console.log("Error getting location permission:", error);
       setLoading(false);
     }
   };
@@ -103,6 +182,13 @@ const MapScreen = () => {
         accuracy: Location.Accuracy.Balanced,
       });
       setLocation(currentLocation);
+
+      // Calculate and set the allowed region (70km radius)
+      const allowed = calculateAllowedRegion(
+        currentLocation.coords.latitude,
+        currentLocation.coords.longitude
+      );
+      setAllowedRegion(allowed);
 
       // Center map on user location
       if (mapRef.current) {
@@ -122,15 +208,15 @@ const MapScreen = () => {
 
   const loadAddresses = async () => {
     try {
-      await fetchPublicAddresses();
-      // Note: Addresses will be available from the store
+      // Load public addresses + user's private addresses for map
+      await fetchMapAddresses(user?.uid);
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error("Error loading addresses:", error);
     }
   };
 
-  const centerOnUserLocation = () => {
+  const centerOnUserLocation = useCallback(() => {
     if (location && mapRef.current) {
       mapRef.current.animateToRegion({
         latitude: location.coords.latitude,
@@ -139,47 +225,44 @@ const MapScreen = () => {
         longitudeDelta: 0.01,
       });
     }
-  };
+  }, [location]);
 
-  const handleMarkerPress = async (address: Address) => {
-    try {
-      setLoading(true);
-      const addressWithReviews = await getAddressWithReviews(address.id);
-      if (addressWithReviews) {
-        setSelectedAddress(addressWithReviews);
-        setModalVisible(true);
-      }
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error("Error fetching address details:", error);
-      // Fallback to basic address if fetch fails
-      setSelectedAddress(address as AddressWithReviews);
-      setModalVisible(true);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const handleMarkerPress = useCallback(
+    async (address: Address) => {
+      // Prevent multiple rapid clicks on Android
+      if (isProcessingMarker) return;
 
-  const closeModal = () => {
-    setModalVisible(false);
-    setSelectedAddress(null);
-  };
-
-  const handleReviewAdded = async () => {
-    if (selectedAddress) {
       try {
-        const updatedAddress = await getAddressWithReviews(selectedAddress.id);
-        if (updatedAddress) {
-          setSelectedAddress(updatedAddress);
+        setIsProcessingMarker(true);
+        setLoading(true);
+
+        // Ensure drawer is closed first to prevent state conflicts on Android
+        setShowDrawer(false);
+
+        // Small delay to ensure state is properly reset
+        await new Promise((resolve) => setTimeout(resolve, 50));
+
+        const addressWithReviews = await getAddressWithReviews(address.id);
+        if (addressWithReviews) {
+          setSelectedAddress(addressWithReviews);
+          setShowDrawer(true);
         }
       } catch (error) {
         // eslint-disable-next-line no-console
-        console.error("Error refreshing address after review:", error);
+        console.error("Error fetching address details:", error);
+        // Fallback to basic address if fetch fails
+        setSelectedAddress(address as AddressWithReviews);
+        setShowDrawer(true);
+      } finally {
+        setLoading(false);
+        // Reset processing flag after a short delay
+        setTimeout(() => setIsProcessingMarker(false), 500);
       }
-    }
-  };
+    },
+    [getAddressWithReviews, isProcessingMarker]
+  );
 
-  const renderMarkers = () => {
+  const renderMarkers = useMemo(() => {
     return addresses.map((address) => (
       <Marker
         key={address.id}
@@ -193,43 +276,37 @@ const MapScreen = () => {
         onPress={() => handleMarkerPress(address)}
       />
     ));
-  };
+  }, [addresses, handleMarkerPress]);
 
-  const RainbowBorder = ({ children }: { children: React.ReactNode }) => {
-    const borderColor = rainbowAnimation.interpolate({
-      inputRange: [0, 0.2, 0.4, 0.6, 0.8, 1],
-      outputRange: [
-        "#ffffff", // White
-        "#b3e5fc", // Light Blue
-        "#81d4fa", // Lighter Blue
-        "#ffb6e6", // Pink
-        "#b39ddb", // Mauve (light purple)
-        "#ffffff", // Back to white
-      ],
-    });
+  const RainbowBorder = useCallback(
+    ({ children }: { children: React.ReactNode }) => {
+      const borderColor = rainbowAnimation.interpolate({
+        inputRange: [0, 0.2, 0.4, 0.6, 0.8, 1],
+        outputRange: [
+          "#ffffff", // White
+          "#b3e5fc", // Light Blue
+          "#81d4fa", // Lighter Blue
+          "#ffb6e6", // Pink
+          "#b39ddb", // Mauve (light purple)
+          "#ffffff", // Back to white
+        ],
+      });
 
-    return (
-      <Animated.View
-        style={[
-          styles.rainbowBorder,
-          {
-            borderColor,
-          },
-        ]}
-      >
-        {children}
-      </Animated.View>
-    );
-  };
-
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#2ecc71" />
-        <Text style={styles.loadingText}>Chargement de la carte...</Text>
-      </View>
-    );
-  }
+      return (
+        <Animated.View
+          style={[
+            styles.rainbowBorder,
+            {
+              borderColor,
+            },
+          ]}
+        >
+          {children}
+        </Animated.View>
+      );
+    },
+    [rainbowAnimation]
+  );
 
   if (permissionStatus !== "granted") {
     return (
@@ -258,18 +335,71 @@ const MapScreen = () => {
         ref={mapRef}
         style={styles.map}
         initialRegion={getInitialRegion()}
+        region={mapRegion || getInitialRegion()}
+        onRegionChangeComplete={handleRegionChange}
         showsUserLocation={true}
         showsMyLocationButton={false}
-        showsCompass={true}
         showsScale={true}
+        showsPointsOfInterests
         followsUserLocation={true}
-        showsBuildings={true}
-        showsTraffic={true}
-        showsPointsOfInterest={true}
+        mapType="mutedStandard"
+        provider="google"
         testID="map-screen"
       >
-        {renderMarkers()}
+        {renderMarkers}
+        {allowedRegion && (
+          <Circle
+            center={{
+              latitude: allowedRegion.latitude,
+              longitude: allowedRegion.longitude,
+            }}
+            radius={70000} // 70km in meters
+            strokeColor="rgba(46, 204, 113, 0.3)"
+            fillColor="rgba(46, 204, 113, 0.1)"
+            strokeWidth={2}
+          />
+        )}
       </MapView>
+
+      {/* Snackbar notification for geofence violation */}
+      {showSnackbar && (
+        <Animated.View
+          style={[
+            styles.snackbarContainer,
+            {
+              transform: [
+                {
+                  translateY: snackbarAnimation.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [100, 0],
+                  }),
+                },
+              ],
+            },
+          ]}
+        >
+          <View style={styles.snackbar}>
+            <Ionicons name="warning" size={20} color="#fff" />
+            <Text style={styles.snackbarText}>
+              Zone restreinte - Retour à la zone autorisée
+            </Text>
+            <TouchableOpacity
+              onPress={() => {
+                Animated.timing(snackbarAnimation, {
+                  toValue: 0,
+                  duration: 300,
+                  useNativeDriver: true,
+                }).start(() => {
+                  setShowSnackbar(false);
+                });
+              }}
+              style={styles.snackbarClose}
+            >
+              <Ionicons name="close" size={18} color="#fff" />
+            </TouchableOpacity>
+          </View>
+        </Animated.View>
+      )}
 
       <TouchableOpacity
         style={styles.centerButton}
@@ -277,6 +407,14 @@ const MapScreen = () => {
         testID="center-on-user-location-button"
       >
         <Ionicons name="locate" size={24} color="#fff" />
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.drawerButton}
+        onPress={() => setShowDrawer(true)}
+        testID="open-drawer-button"
+      >
+        <Ionicons name="list" size={24} color="#fff" />
       </TouchableOpacity>
 
       {user && (
@@ -302,12 +440,10 @@ const MapScreen = () => {
         </View>
       </View>
 
-      <AddressDetailsModal
-        visible={modalVisible}
-        address={selectedAddress}
-        onClose={closeModal}
-        loading={loading}
-        onReviewAdded={handleReviewAdded}
+      <AddressDrawer
+        isVisible={showDrawer}
+        onClose={() => setShowDrawer(false)}
+        selectedAddressFromMap={selectedAddress}
       />
     </View>
   );
@@ -437,6 +573,86 @@ const styles = StyleSheet.create({
   legendText: {
     fontSize: 12,
     color: "#333",
+  },
+  geofenceIndicator: {
+    position: "absolute",
+    top: 50,
+    left: 16,
+    right: 16,
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    flexDirection: "row",
+    alignItems: "center",
+    zIndex: 1000,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  geofenceText: {
+    fontSize: 12,
+    color: "#2ecc71",
+    fontWeight: "600",
+    marginLeft: 6,
+  },
+  snackbarContainer: {
+    position: "absolute",
+    bottom: 50,
+    left: 16,
+    right: 16,
+    zIndex: 1000,
+  },
+  snackbar: {
+    backgroundColor: "#e74c3c",
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderRadius: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4.65,
+    elevation: 8,
+  },
+  snackbarText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "500",
+    marginLeft: 8,
+    flex: 1,
+  },
+  snackbarClose: {
+    padding: 4,
+    marginLeft: 8,
+  },
+  drawerButton: {
+    position: "absolute",
+    bottom: 160,
+    right: 20,
+    backgroundColor: "#2ecc71",
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
 });
 

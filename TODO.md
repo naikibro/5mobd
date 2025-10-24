@@ -1,4 +1,5 @@
 # TODO
 
-- after deleting an adress, should redirect to the list page and refresh
-- if loading adresses, display the search bar but display a loading indicator
+- ✅ in the my adresse page
+  - ✅ use the same list of cards used in the map page drawer
+  - ✅ kepp the searchbar and filtering as is

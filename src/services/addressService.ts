@@ -132,6 +132,28 @@ class AddressService {
     return querySnapshot.docs.map(this.convertAddressFromFirestore.bind(this));
   }
 
+  // Get addresses for map view: public addresses + user's private addresses
+  async getMapAddresses(userId?: string): Promise<Address[]> {
+    if (!userId) {
+      // If no user, just return public addresses
+      return this.getPublicAddresses();
+    }
+
+    // Get both public addresses and user's private addresses
+    const [publicAddresses, userAddresses] = await Promise.all([
+      this.getPublicAddresses(),
+      this.getAddressesByUser(userId),
+    ]);
+
+    // Combine and remove duplicates
+    const addressMap = new Map<string, Address>();
+
+    publicAddresses.forEach((addr) => addressMap.set(addr.id, addr));
+    userAddresses.forEach((addr) => addressMap.set(addr.id, addr));
+
+    return Array.from(addressMap.values());
+  }
+
   async getAllAddresses(): Promise<Address[]> {
     const querySnapshot = await getDocs(collection(db, "addresses"));
     return querySnapshot.docs.map(this.convertAddressFromFirestore.bind(this));
@@ -189,17 +211,72 @@ class AddressService {
     await deleteObject(photoRef);
   }
 
+  // Favorites operations
+  async addToFavorites(userId: string, addressId: string): Promise<void> {
+    await addDoc(collection(db, "favorites"), {
+      userId,
+      addressId,
+      createdAt: serverTimestamp(),
+    });
+  }
+
+  async removeFromFavorites(userId: string, addressId: string): Promise<void> {
+    const q = query(
+      collection(db, "favorites"),
+      where("userId", "==", userId),
+      where("addressId", "==", addressId)
+    );
+    const querySnapshot = await getDocs(q);
+    const deletePromises = querySnapshot.docs.map((doc) => deleteDoc(doc.ref));
+    await Promise.all(deletePromises);
+  }
+
+  async getUserFavorites(userId: string): Promise<string[]> {
+    const q = query(collection(db, "favorites"), where("userId", "==", userId));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map((doc) => doc.data().addressId);
+  }
+
+  async getUserFavoritesWithAddresses(userId: string): Promise<Address[]> {
+    const favoriteIds = await this.getUserFavorites(userId);
+    if (favoriteIds.length === 0) return [];
+
+    const addresses: Address[] = [];
+    for (const addressId of favoriteIds) {
+      const address = await this.getAddressById(addressId);
+      if (address) {
+        addresses.push(address);
+      }
+    }
+    return addresses;
+  }
+
+  async isFavorite(userId: string, addressId: string): Promise<boolean> {
+    const q = query(
+      collection(db, "favorites"),
+      where("userId", "==", userId),
+      where("addressId", "==", addressId)
+    );
+    const querySnapshot = await getDocs(q);
+    return !querySnapshot.empty;
+  }
+
   // Search and filter
   async searchAddresses(
     searchQuery: string,
     visibility: "all" | "public" | "private" = "all",
-    userId?: string
+    userId?: string,
+    userLocation?: { latitude: number; longitude: number },
+    maxDistanceKm: number = 30
   ): Promise<Address[]> {
     let q = query(collection(db, "addresses"));
 
     if (visibility === "public") {
       q = query(q, where("isPublic", "==", true));
     } else if (visibility === "private" && userId) {
+      q = query(q, where("userId", "==", userId));
+    } else if (visibility === "all" && userId) {
+      // When searching "all" with userId, only show user's addresses
       q = query(q, where("userId", "==", userId));
     }
 
@@ -219,9 +296,74 @@ class AddressService {
       );
     }
 
+    // Filter by distance if user location is provided
+    if (userLocation) {
+      results = this.filterByDistance(results, userLocation, maxDistanceKm);
+    }
+
     return results.sort(
       (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
     );
+  }
+
+  // Helper method to filter addresses by distance
+  private filterByDistance(
+    addresses: Address[],
+    userLocation: { latitude: number; longitude: number },
+    maxDistanceKm: number
+  ): Address[] {
+    console.log(
+      `Filtering ${addresses.length} addresses within ${maxDistanceKm}km of (${userLocation.latitude}, ${userLocation.longitude})`
+    );
+
+    const filtered = addresses.filter((address) => {
+      const distance = this.calculateDistance(
+        userLocation.latitude,
+        userLocation.longitude,
+        address.latitude,
+        address.longitude
+      );
+      console.log(
+        `Address "${address.name}" at (${address.latitude}, ${
+          address.longitude
+        }) is ${distance.toFixed(2)}km away`
+      );
+      return distance <= maxDistanceKm;
+    });
+
+    console.log(
+      `Filtered to ${filtered.length} addresses within ${maxDistanceKm}km`
+    );
+    return filtered;
+  }
+
+  // Calculate distance between two coordinates using Haversine formula
+  private calculateDistance(
+    lat1: number,
+    lon1: number,
+    lat2: number,
+    lon2: number
+  ): number {
+    const R = 6371; // Earth's radius in kilometers
+    const dLat = this.toRadians(lat2 - lat1);
+    const dLon = this.toRadians(lon2 - lon1);
+
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(this.toRadians(lat1)) *
+        Math.cos(this.toRadians(lat2)) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const distance = R * c;
+
+    return distance;
+  }
+
+  // Convert degrees to radians
+  private toRadians(degrees: number): number {
+    return degrees * (Math.PI / 180);
   }
 }
 
