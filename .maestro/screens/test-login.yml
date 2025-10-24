@@ -18,6 +18,7 @@ env:
 - tapOn:
     id: "login-password-input"
 - inputText: ${MAESTRO_TEST_PASSWORD}
+- hideKeyboard
 - tapOn:
     id: "login-button"
 
