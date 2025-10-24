@@ -16,6 +16,7 @@ import PhotoGallery from "../components/PhotoGallery";
 import { useMyAddresses } from "../hooks/useMyAddresses";
 import { useAddressStore } from "../stores/addressStore";
 import { Address } from "../types/address";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const { width } = Dimensions.get("window");
 
@@ -34,6 +35,9 @@ const MyAddressesScreen = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [filter, setFilter] = useState<"all" | "created" | "favorites">("all");
+  const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(
+    null
+  );
 
   // Refresh addresses when screen comes into focus
   useEffect(() => {
@@ -44,26 +48,48 @@ const MyAddressesScreen = () => {
     // Refresh immediately
     refreshOnFocus();
 
-    // Set up interval to refresh every 2 seconds when screen is active
-    const interval = setInterval(refreshOnFocus, 2000);
+    // Set up interval to refresh every 30 seconds when screen is active (reduced from 2 seconds)
+    const interval = setInterval(refreshOnFocus, 30000);
 
     return () => clearInterval(interval);
   }, [refreshMyAddresses]);
 
+  // Cleanup search timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (searchTimeout) {
+        clearTimeout(searchTimeout);
+      }
+    };
+  }, [searchTimeout]);
+
   const handleSearch = async (query: string) => {
     setSearchQuery(query);
+
+    // Clear existing timeout
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
+    }
+
     if (query.trim()) {
       setIsSearching(true);
-      try {
-        await searchMyAddresses(query);
-      } catch (error) {
-        // eslint-disable-next-line no-console
-        console.error("Error searching addresses:", error);
-      } finally {
-        setIsSearching(false);
-      }
+
+      // Debounce search by 500ms
+      const timeout = setTimeout(async () => {
+        try {
+          await searchMyAddresses(query);
+        } catch (error) {
+          // eslint-disable-next-line no-console
+          console.error("Error searching addresses:", error);
+        } finally {
+          setIsSearching(false);
+        }
+      }, 500);
+
+      setSearchTimeout(timeout);
     } else {
-      // Reset to show all addresses
+      // Reset to show all addresses immediately
+      setIsSearching(false);
       loadMyAddresses();
     }
   };
@@ -155,120 +181,125 @@ const MyAddressesScreen = () => {
 
   const filteredAddresses = getFilteredAddresses(filter);
 
-  if (loading && filteredAddresses.length === 0) {
+  if (loading && filteredAddresses.length === 0 && !isSearching) {
     return (
-      <View style={[styles.container, styles.centered]}>
-        <Text>Chargement de vos adresses...</Text>
-      </View>
+      <SafeAreaView edges={["top"]} style={styles.container}>
+        <View style={[styles.container, styles.centered]}>
+          <ActivityIndicator size="large" color="#2ecc71" />
+          <Text style={{ marginTop: 16, color: "#666" }}>
+            Chargement de vos adresses...
+          </Text>
+        </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.searchContainer}>
-        <Ionicons
-          name="search"
-          size={20}
-          color="#666"
-          style={styles.searchIcon}
-        />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Rechercher dans mes adresses..."
-          value={searchQuery}
-          testID="my-addresses-search-input"
-          onChangeText={handleSearch}
-        />
-        {(isSearching || loading) && (
-          <ActivityIndicator size="small" color="#2ecc71" />
-        )}
-      </View>
+    <SafeAreaView edges={["top"]} style={styles.container}>
+      <View style={styles.container}>
+        <View style={styles.searchContainer}>
+          <Ionicons
+            name="search"
+            size={20}
+            color="#666"
+            style={styles.searchIcon}
+          />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Rechercher dans mes adresses..."
+            value={searchQuery}
+            testID="my-addresses-search-input"
+            onChangeText={handleSearch}
+          />
+          {isSearching && <ActivityIndicator size="small" color="#2ecc71" />}
+        </View>
 
-      <View style={styles.filterContainer}>
-        <TouchableOpacity
-          style={[
-            styles.filterButton,
-            filter === "all" && styles.filterButtonActive,
-          ]}
-          onPress={() => handleFilterChange("all")}
-          testID="filter-all-button"
-        >
-          <Text
+        <View style={styles.filterContainer}>
+          <TouchableOpacity
             style={[
-              styles.filterText,
-              filter === "all" && styles.filterTextActive,
+              styles.filterButton,
+              filter === "all" && styles.filterButtonActive,
             ]}
+            onPress={() => handleFilterChange("all")}
+            testID="filter-all-button"
           >
-            Toutes
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.filterButton,
-            filter === "created" && styles.filterButtonActive,
-          ]}
-          onPress={() => handleFilterChange("created")}
-          testID="filter-created-button"
-        >
-          <Text
+            <Text
+              style={[
+                styles.filterText,
+                filter === "all" && styles.filterTextActive,
+              ]}
+            >
+              Toutes
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
             style={[
-              styles.filterText,
-              filter === "created" && styles.filterTextActive,
+              styles.filterButton,
+              filter === "created" && styles.filterButtonActive,
             ]}
+            onPress={() => handleFilterChange("created")}
+            testID="filter-created-button"
           >
-            Créées
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.filterButton,
-            filter === "favorites" && styles.filterButtonActive,
-          ]}
-          onPress={() => handleFilterChange("favorites")}
-          testID="filter-favorites-button"
-        >
-          <Text
+            <Text
+              style={[
+                styles.filterText,
+                filter === "created" && styles.filterTextActive,
+              ]}
+            >
+              Créées
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
             style={[
-              styles.filterText,
-              filter === "favorites" && styles.filterTextActive,
+              styles.filterButton,
+              filter === "favorites" && styles.filterButtonActive,
             ]}
+            onPress={() => handleFilterChange("favorites")}
+            testID="filter-favorites-button"
           >
-            Favoris
-          </Text>
-        </TouchableOpacity>
-      </View>
+            <Text
+              style={[
+                styles.filterText,
+                filter === "favorites" && styles.filterTextActive,
+              ]}
+            >
+              Favoris
+            </Text>
+          </TouchableOpacity>
+        </View>
 
-      <Text style={styles.title}>Mes adresses</Text>
-      <Text style={styles.subtitle}>
-        Trouvez ici les adresses que vous avez créées et vos favoris
-      </Text>
-      <FlatList
-        data={filteredAddresses}
-        renderItem={renderAddress}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.list}
-        numColumns={Platform.select({ web: width > 768 ? 2 : 1, default: 1 })}
-        key={Platform.select({
-          web: width > 768 ? "two-columns" : "one-column",
-          default: "one-column",
-        })}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Ionicons name="location-outline" size={80} color="#bdc3c7" />
-            <Text style={styles.emptyText}>
-              {searchQuery
-                ? "Aucune adresse trouvée"
-                : "Vous n'avez pas encore d'adresses"}
-            </Text>
-            <Text style={styles.emptySubtext}>
-              {searchQuery
-                ? "Essayez avec d'autres mots-clés"
-                : "Créez votre première adresse"}
-            </Text>
-          </View>
-        }
-      />
-    </View>
+        <Text style={styles.title}>Mes adresses</Text>
+        <Text style={styles.subtitle}>
+          Trouvez ici les adresses que vous avez créées et vos favoris
+        </Text>
+        <FlatList
+          data={filteredAddresses}
+          renderItem={renderAddress}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.list}
+          numColumns={Platform.select({ web: width > 768 ? 2 : 1, default: 1 })}
+          key={Platform.select({
+            web: width > 768 ? "two-columns" : "one-column",
+            default: "one-column",
+          })}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Ionicons name="location-outline" size={80} color="#bdc3c7" />
+              <Text style={styles.emptyText}>
+                {searchQuery
+                  ? "Aucune adresse trouvée"
+                  : "Vous n'avez pas encore d'adresses"}
+              </Text>
+              <Text style={styles.emptySubtext}>
+                {searchQuery
+                  ? "Essayez avec d'autres mots-clés"
+                  : "Créez votre première adresse"}
+              </Text>
+            </View>
+          }
+        />
+      </View>
+    </SafeAreaView>
   );
 };
 

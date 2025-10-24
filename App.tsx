@@ -55,17 +55,17 @@ function MainTabs() {
       <Tab.Screen
         name="Map"
         component={MapScreen}
-        options={{ title: "Carte" }}
+        options={{ headerShown: false, title: "Carte" }}
       />
       <Tab.Screen
         name="MyAddresses"
         component={MyAddressesScreen}
-        options={{ title: "Mes adresses" }}
+        options={{ headerShown: false, title: "Mes adresses" }}
       />
       <Tab.Screen
         name="Profile"
         component={ProfileScreen}
-        options={{ title: "Mon profil" }}
+        options={{ headerShown: false, title: "Mon profil" }}
       />
     </Tab.Navigator>
   );
