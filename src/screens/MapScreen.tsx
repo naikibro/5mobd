@@ -10,7 +10,7 @@ import {
   ActivityIndicator,
   Animated,
 } from "react-native";
-import MapView, { Marker, Region } from "react-native-maps";
+import MapView, { Marker, Region, Circle } from "react-native-maps";
 import * as Location from "expo-location";
 import { Ionicons } from "@expo/vector-icons";
 import { useAddressStore } from "../stores/addressStore";
@@ -37,8 +37,12 @@ const MapScreen = () => {
   const [selectedAddress, setSelectedAddress] =
     useState<AddressWithReviews | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
+  const [mapRegion, setMapRegion] = useState<Region | null>(null);
+  const [allowedRegion, setAllowedRegion] = useState<Region | null>(null);
+  const [showSnackbar, setShowSnackbar] = useState<boolean>(false);
   const mapRef = useRef<MapView>(null);
   const rainbowAnimation = useRef(new Animated.Value(0)).current;
+  const snackbarAnimation = useRef(new Animated.Value(0)).current;
 
   const getInitialRegion = (): Region => {
     if (location) {
@@ -58,6 +62,66 @@ const MapScreen = () => {
     };
   };
 
+  // Calculate allowed region with 70km radius
+  const calculateAllowedRegion = (userLat: number, userLon: number): Region => {
+    // Convert 70km to degrees (approximate)
+    // 1 degree latitude ≈ 111km
+    // 1 degree longitude ≈ 111km * cos(latitude)
+    const latDelta = 70 / 111; // ~0.63 degrees
+    const lonDelta = 70 / (111 * Math.cos((userLat * Math.PI) / 180)); // Adjust for latitude
+
+    return {
+      latitude: userLat,
+      longitude: userLon,
+      latitudeDelta: latDelta,
+      longitudeDelta: lonDelta,
+    };
+  };
+
+  // Check if a region is within the allowed bounds
+  const isRegionAllowed = (region: Region): boolean => {
+    if (!allowedRegion) return true;
+
+    const latDiff = Math.abs(region.latitude - allowedRegion.latitude);
+    const lonDiff = Math.abs(region.longitude - allowedRegion.longitude);
+
+    // Check if the region center is within the allowed bounds
+    const maxLatDiff = allowedRegion.latitudeDelta / 2;
+    const maxLonDiff = allowedRegion.longitudeDelta / 2;
+
+    return latDiff <= maxLatDiff && lonDiff <= maxLonDiff;
+  };
+
+  // Handle region change and enforce geofencing
+  const handleRegionChange = (region: Region) => {
+    if (isRegionAllowed(region)) {
+      setMapRegion(region);
+    } else {
+      // Show snackbar notification
+      setShowSnackbar(true);
+      Animated.timing(snackbarAnimation, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+
+      setTimeout(() => {
+        Animated.timing(snackbarAnimation, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }).start(() => {
+          setShowSnackbar(false);
+        });
+      }, 4000); // Hide snackbar after 4 seconds
+
+      // Snap back to the allowed region
+      if (mapRef.current && allowedRegion) {
+        mapRef.current.animateToRegion(allowedRegion, 1000);
+      }
+    }
+  };
+
   useEffect(() => {
     getLocationPermission();
     loadAddresses();
@@ -75,6 +139,15 @@ const MapScreen = () => {
 
     startRainbowAnimation();
   }, [rainbowAnimation]);
+
+  // Set allowed region for simulator fallback
+  useEffect(() => {
+    if (!allowedRegion && !location) {
+      // Set Paris as fallback with 70km radius
+      const parisAllowed = calculateAllowedRegion(48.8566, 2.3522);
+      setAllowedRegion(parisAllowed);
+    }
+  }, [allowedRegion, location]);
 
   const getLocationPermission = async () => {
     try {
@@ -103,6 +176,13 @@ const MapScreen = () => {
         accuracy: Location.Accuracy.Balanced,
       });
       setLocation(currentLocation);
+
+      // Calculate and set the allowed region (70km radius)
+      const allowed = calculateAllowedRegion(
+        currentLocation.coords.latitude,
+        currentLocation.coords.longitude
+      );
+      setAllowedRegion(allowed);
 
       // Center map on user location
       if (mapRef.current) {
@@ -258,6 +338,8 @@ const MapScreen = () => {
         ref={mapRef}
         style={styles.map}
         initialRegion={getInitialRegion()}
+        region={mapRegion || getInitialRegion()}
+        onRegionChangeComplete={handleRegionChange}
         showsUserLocation={true}
         showsMyLocationButton={false}
         showsCompass={true}
@@ -269,7 +351,59 @@ const MapScreen = () => {
         testID="map-screen"
       >
         {renderMarkers()}
+        {allowedRegion && (
+          <Circle
+            center={{
+              latitude: allowedRegion.latitude,
+              longitude: allowedRegion.longitude,
+            }}
+            radius={70000} // 70km in meters
+            strokeColor="rgba(46, 204, 113, 0.3)"
+            fillColor="rgba(46, 204, 113, 0.1)"
+            strokeWidth={2}
+          />
+        )}
       </MapView>
+
+      {/* Snackbar notification for geofence violation */}
+      {showSnackbar && (
+        <Animated.View
+          style={[
+            styles.snackbarContainer,
+            {
+              transform: [
+                {
+                  translateY: snackbarAnimation.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [100, 0],
+                  }),
+                },
+              ],
+            },
+          ]}
+        >
+          <View style={styles.snackbar}>
+            <Ionicons name="warning" size={20} color="#fff" />
+            <Text style={styles.snackbarText}>
+              Zone restreinte - Retour à la zone autorisée
+            </Text>
+            <TouchableOpacity
+              onPress={() => {
+                Animated.timing(snackbarAnimation, {
+                  toValue: 0,
+                  duration: 300,
+                  useNativeDriver: true,
+                }).start(() => {
+                  setShowSnackbar(false);
+                });
+              }}
+              style={styles.snackbarClose}
+            >
+              <Ionicons name="close" size={18} color="#fff" />
+            </TouchableOpacity>
+          </View>
+        </Animated.View>
+      )}
 
       <TouchableOpacity
         style={styles.centerButton}
@@ -437,6 +571,67 @@ const styles = StyleSheet.create({
   legendText: {
     fontSize: 12,
     color: "#333",
+  },
+  geofenceIndicator: {
+    position: "absolute",
+    top: 50,
+    left: 16,
+    right: 16,
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    flexDirection: "row",
+    alignItems: "center",
+    zIndex: 1000,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  geofenceText: {
+    fontSize: 12,
+    color: "#2ecc71",
+    fontWeight: "600",
+    marginLeft: 6,
+  },
+  snackbarContainer: {
+    position: "absolute",
+    bottom: 50,
+    left: 16,
+    right: 16,
+    zIndex: 1000,
+  },
+  snackbar: {
+    backgroundColor: "#e74c3c",
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderRadius: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4.65,
+    elevation: 8,
+  },
+  snackbarText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "500",
+    marginLeft: 8,
+    flex: 1,
+  },
+  snackbarClose: {
+    padding: 4,
+    marginLeft: 8,
   },
 });
 
