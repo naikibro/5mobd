@@ -1,3 +1,5 @@
 # TODO
 
-- in the Adresses Publiques page, create a slider filter between 1 and 20.000km for radius of search
+- remove the adresses publiques page and tab
+- in the map page, create a side drawer
+  - drawer should contain the adresses publiques page content

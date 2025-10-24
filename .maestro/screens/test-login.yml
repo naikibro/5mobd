@@ -23,8 +23,6 @@ env:
 
 # Verify main tabs are visible after login
 - assertVisible:
-    id: "addresses-tab"
-- assertVisible:
     id: "map-tab"
 - assertVisible:
     id: "my-addresses-tab"
