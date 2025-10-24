@@ -2,7 +2,13 @@ import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import * as Location from "expo-location";
-import React, { useEffect, useRef, useState } from "react";
+import React, {
+  useEffect,
+  useRef,
+  useState,
+  useCallback,
+  useMemo,
+} from "react";
 import {
   Alert,
   Animated,
@@ -39,11 +45,12 @@ const MapScreen = () => {
   const [allowedRegion, setAllowedRegion] = useState<Region | null>(null);
   const [showSnackbar, setShowSnackbar] = useState<boolean>(false);
   const [showDrawer, setShowDrawer] = useState<boolean>(false);
+  const [isProcessingMarker, setIsProcessingMarker] = useState(false);
   const mapRef = useRef<MapView>(null);
   const rainbowAnimation = useRef(new Animated.Value(0)).current;
   const snackbarAnimation = useRef(new Animated.Value(0)).current;
 
-  const getInitialRegion = (): Region => {
+  const getInitialRegion = useCallback((): Region => {
     if (location) {
       return {
         latitude: location.coords.latitude,
@@ -59,7 +66,7 @@ const MapScreen = () => {
       latitudeDelta: 0.0922,
       longitudeDelta: 0.0421,
     };
-  };
+  }, [location]);
 
   // Calculate allowed region with 70km radius
   const calculateAllowedRegion = (userLat: number, userLon: number): Region => {
@@ -209,7 +216,7 @@ const MapScreen = () => {
     }
   };
 
-  const centerOnUserLocation = () => {
+  const centerOnUserLocation = useCallback(() => {
     if (location && mapRef.current) {
       mapRef.current.animateToRegion({
         latitude: location.coords.latitude,
@@ -218,28 +225,44 @@ const MapScreen = () => {
         longitudeDelta: 0.01,
       });
     }
-  };
+  }, [location]);
 
-  const handleMarkerPress = async (address: Address) => {
-    try {
-      setLoading(true);
-      const addressWithReviews = await getAddressWithReviews(address.id);
-      if (addressWithReviews) {
-        setSelectedAddress(addressWithReviews);
+  const handleMarkerPress = useCallback(
+    async (address: Address) => {
+      // Prevent multiple rapid clicks on Android
+      if (isProcessingMarker) return;
+
+      try {
+        setIsProcessingMarker(true);
+        setLoading(true);
+
+        // Ensure drawer is closed first to prevent state conflicts on Android
+        setShowDrawer(false);
+
+        // Small delay to ensure state is properly reset
+        await new Promise((resolve) => setTimeout(resolve, 50));
+
+        const addressWithReviews = await getAddressWithReviews(address.id);
+        if (addressWithReviews) {
+          setSelectedAddress(addressWithReviews);
+          setShowDrawer(true);
+        }
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error("Error fetching address details:", error);
+        // Fallback to basic address if fetch fails
+        setSelectedAddress(address as AddressWithReviews);
         setShowDrawer(true);
+      } finally {
+        setLoading(false);
+        // Reset processing flag after a short delay
+        setTimeout(() => setIsProcessingMarker(false), 500);
       }
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error("Error fetching address details:", error);
-      // Fallback to basic address if fetch fails
-      setSelectedAddress(address as AddressWithReviews);
-      setShowDrawer(true);
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+    [getAddressWithReviews, isProcessingMarker]
+  );
 
-  const renderMarkers = () => {
+  const renderMarkers = useMemo(() => {
     return addresses.map((address) => (
       <Marker
         key={address.id}
@@ -253,34 +276,37 @@ const MapScreen = () => {
         onPress={() => handleMarkerPress(address)}
       />
     ));
-  };
+  }, [addresses, handleMarkerPress]);
 
-  const RainbowBorder = ({ children }: { children: React.ReactNode }) => {
-    const borderColor = rainbowAnimation.interpolate({
-      inputRange: [0, 0.2, 0.4, 0.6, 0.8, 1],
-      outputRange: [
-        "#ffffff", // White
-        "#b3e5fc", // Light Blue
-        "#81d4fa", // Lighter Blue
-        "#ffb6e6", // Pink
-        "#b39ddb", // Mauve (light purple)
-        "#ffffff", // Back to white
-      ],
-    });
+  const RainbowBorder = useCallback(
+    ({ children }: { children: React.ReactNode }) => {
+      const borderColor = rainbowAnimation.interpolate({
+        inputRange: [0, 0.2, 0.4, 0.6, 0.8, 1],
+        outputRange: [
+          "#ffffff", // White
+          "#b3e5fc", // Light Blue
+          "#81d4fa", // Lighter Blue
+          "#ffb6e6", // Pink
+          "#b39ddb", // Mauve (light purple)
+          "#ffffff", // Back to white
+        ],
+      });
 
-    return (
-      <Animated.View
-        style={[
-          styles.rainbowBorder,
-          {
-            borderColor,
-          },
-        ]}
-      >
-        {children}
-      </Animated.View>
-    );
-  };
+      return (
+        <Animated.View
+          style={[
+            styles.rainbowBorder,
+            {
+              borderColor,
+            },
+          ]}
+        >
+          {children}
+        </Animated.View>
+      );
+    },
+    [rainbowAnimation]
+  );
 
   if (permissionStatus !== "granted") {
     return (
@@ -313,16 +339,14 @@ const MapScreen = () => {
         onRegionChangeComplete={handleRegionChange}
         showsUserLocation={true}
         showsMyLocationButton={false}
-        showsCompass={true}
         showsScale={true}
+        showsPointsOfInterests
         followsUserLocation={true}
-        showsBuildings={true}
-        showsTraffic={true}
-        mapType="standard"
+        mapType="mutedStandard"
         provider="google"
         testID="map-screen"
       >
-        {renderMarkers()}
+        {renderMarkers}
         {allowedRegion && (
           <Circle
             center={{

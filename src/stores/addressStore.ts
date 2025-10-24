@@ -335,7 +335,7 @@ export const useAddressStore = create<AddressState>((set, get) => ({
     try {
       set({ error: null });
       await addressService.addToFavorites(userId, addressId);
-      // Update local favorites state
+      // Update local favorites state immediately for better UX
       const { favorites } = get();
       if (!favorites.includes(addressId)) {
         set({ favorites: [...favorites, addressId] });
@@ -350,7 +350,7 @@ export const useAddressStore = create<AddressState>((set, get) => ({
     try {
       set({ error: null });
       await addressService.removeFromFavorites(userId, addressId);
-      // Update local favorites state
+      // Update local favorites state immediately for better UX
       const { favorites } = get();
       set({ favorites: favorites.filter((id) => id !== addressId) });
     } catch (error: any) {
