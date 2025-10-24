@@ -24,30 +24,35 @@ export const useMyAddresses = () => {
   });
 
   // Load all addresses for the current user
-  const loadMyAddresses = useCallback(async () => {
-    if (!user) return;
+  const loadMyAddresses = useCallback(
+    async (silent = false) => {
+      if (!user) return;
 
-    try {
-      setState((prev) => ({ ...prev, loading: true, error: null }));
+      try {
+        if (!silent) {
+          setState((prev) => ({ ...prev, loading: true, error: null }));
+        }
 
-      const { created, favorites, combined } =
-        await myAddressesService.getMyAddresses(user.uid);
+        const { created, favorites, combined } =
+          await myAddressesService.getMyAddresses(user.uid);
 
-      setState((prev) => ({
-        ...prev,
-        createdAddresses: created,
-        favoriteAddresses: favorites,
-        combinedAddresses: combined,
-        loading: false,
-      }));
-    } catch (error: any) {
-      setState((prev) => ({
-        ...prev,
-        error: error.message,
-        loading: false,
-      }));
-    }
-  }, [user]);
+        setState((prev) => ({
+          ...prev,
+          createdAddresses: created,
+          favoriteAddresses: favorites,
+          combinedAddresses: combined,
+          loading: false,
+        }));
+      } catch (error: any) {
+        setState((prev) => ({
+          ...prev,
+          error: error.message,
+          loading: false,
+        }));
+      }
+    },
+    [user]
+  );
 
   // Search in user's addresses
   const searchMyAddresses = useCallback(
@@ -222,7 +227,7 @@ export const useMyAddresses = () => {
     removeFromFavorites,
     isFavorite,
     toggleFavorite,
-    refreshMyAddresses: loadMyAddresses,
+    refreshMyAddresses: () => loadMyAddresses(true),
 
     // Utilities
     getFilteredAddresses,
