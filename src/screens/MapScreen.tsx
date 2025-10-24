@@ -318,7 +318,8 @@ const MapScreen = () => {
         followsUserLocation={true}
         showsBuildings={true}
         showsTraffic={true}
-        showsPointsOfInterest={true}
+        mapType="standard"
+        provider="google"
         testID="map-screen"
       >
         {renderMarkers()}
