@@ -4,50 +4,19 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
 import { ActivityIndicator, View } from "react-native";
-import AddressListScreen from "./src/screens/AddressListScreen";
-import AddressDetailsScreen from "./src/screens/AddressDetailsScreen";
 import MyAddressesScreen from "./src/screens/MyAddressesScreen";
 import MapScreen from "./src/screens/MapScreen";
 import CreateAddressScreen from "./src/screens/CreateAddressScreen";
-import ReviewScreen from "./src/screens/ReviewScreen";
 import LoginScreen from "./src/screens/LoginScreen";
 import SignupScreen from "./src/screens/SignupScreen";
 import ProfileScreen from "./src/screens/ProfileScreen";
 import SplashScreen from "./src/screens/SplashScreen";
 import { useAuthStore } from "./src/stores/authStore";
 import { useAddressStore } from "./src/stores/addressStore";
-import {
-  RootStackParamList,
-  MainTabParamList,
-  AddressStackParamList,
-} from "./src/types/navigation";
+import { RootStackParamList, MainTabParamList } from "./src/types/navigation";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
-const AddressStackNavigator =
-  createNativeStackNavigator<AddressStackParamList>();
-
-function AddressStack() {
-  return (
-    <AddressStackNavigator.Navigator>
-      <AddressStackNavigator.Screen
-        name="AddressList"
-        component={AddressListScreen}
-        options={{ title: "Adresses publiques" }}
-      />
-      <AddressStackNavigator.Screen
-        name="AddressDetails"
-        component={AddressDetailsScreen}
-        options={{ title: "Détails" }}
-      />
-      <AddressStackNavigator.Screen
-        name="Reviews"
-        component={ReviewScreen}
-        options={{ title: "Laisser un avis" }}
-      />
-    </AddressStackNavigator.Navigator>
-  );
-}
 
 function MainTabs() {
   return (
@@ -56,10 +25,7 @@ function MainTabs() {
         tabBarIcon: ({ focused, color, size }) => {
           let iconName: keyof typeof Ionicons.glyphMap;
           let testID: string;
-          if (route.name === "Addresses") {
-            iconName = focused ? "location" : "location-outline";
-            testID = "addresses-tab";
-          } else if (route.name === "Map") {
+          if (route.name === "Map") {
             iconName = focused ? "map" : "map-outline";
             testID = "map-tab";
           } else if (route.name === "MyAddresses") {
@@ -86,11 +52,6 @@ function MainTabs() {
         tabBarInactiveTintColor: "gray",
       })}
     >
-      <Tab.Screen
-        name="Addresses"
-        component={AddressStack}
-        options={{ title: "Adresses", headerShown: false }}
-      />
       <Tab.Screen
         name="Map"
         component={MapScreen}

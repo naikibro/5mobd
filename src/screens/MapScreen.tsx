@@ -1,24 +1,23 @@
-import React, { useState, useEffect, useRef } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Alert,
-  Platform,
-  Dimensions,
-  ActivityIndicator,
-  Animated,
-} from "react-native";
-import MapView, { Marker, Region, Circle } from "react-native-maps";
-import * as Location from "expo-location";
 import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import * as Location from "expo-location";
+import React, { useEffect, useRef, useState } from "react";
+import {
+  Alert,
+  Animated,
+  Dimensions,
+  Platform,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import MapView, { Circle, Marker, Region } from "react-native-maps";
+import AddressDrawer from "../components/AddressDrawer";
 import { useAddressStore } from "../stores/addressStore";
 import { useAuthStore } from "../stores/authStore";
 import { Address, AddressWithReviews } from "../types/address";
-import AddressDetailsModal from "../components/AddressDetailsModal";
-import { useNavigation } from "@react-navigation/native";
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../types/navigation";
 
 const { width, height } = Dimensions.get("window");
@@ -32,14 +31,14 @@ const MapScreen = () => {
   const [location, setLocation] = useState<Location.LocationObject | null>(
     null
   );
-  const [loading, setLoading] = useState(true);
+  const [_loading, setLoading] = useState(true);
   const [permissionStatus, setPermissionStatus] = useState<string>("");
   const [selectedAddress, setSelectedAddress] =
     useState<AddressWithReviews | null>(null);
-  const [modalVisible, setModalVisible] = useState(false);
   const [mapRegion, setMapRegion] = useState<Region | null>(null);
   const [allowedRegion, setAllowedRegion] = useState<Region | null>(null);
   const [showSnackbar, setShowSnackbar] = useState<boolean>(false);
+  const [showDrawer, setShowDrawer] = useState<boolean>(false);
   const mapRef = useRef<MapView>(null);
   const rainbowAnimation = useRef(new Animated.Value(0)).current;
   const snackbarAnimation = useRef(new Animated.Value(0)).current;
@@ -165,7 +164,7 @@ const MapScreen = () => {
       }
     } catch (error) {
       // eslint-disable-next-line no-console
-      console.error("Error getting location permission:", error);
+      console.log("Error getting location permission:", error);
       setLoading(false);
     }
   };
@@ -227,35 +226,16 @@ const MapScreen = () => {
       const addressWithReviews = await getAddressWithReviews(address.id);
       if (addressWithReviews) {
         setSelectedAddress(addressWithReviews);
-        setModalVisible(true);
+        setShowDrawer(true);
       }
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error("Error fetching address details:", error);
       // Fallback to basic address if fetch fails
       setSelectedAddress(address as AddressWithReviews);
-      setModalVisible(true);
+      setShowDrawer(true);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const closeModal = () => {
-    setModalVisible(false);
-    setSelectedAddress(null);
-  };
-
-  const handleReviewAdded = async () => {
-    if (selectedAddress) {
-      try {
-        const updatedAddress = await getAddressWithReviews(selectedAddress.id);
-        if (updatedAddress) {
-          setSelectedAddress(updatedAddress);
-        }
-      } catch (error) {
-        // eslint-disable-next-line no-console
-        console.error("Error refreshing address after review:", error);
-      }
     }
   };
 
@@ -301,15 +281,6 @@ const MapScreen = () => {
       </Animated.View>
     );
   };
-
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#2ecc71" />
-        <Text style={styles.loadingText}>Chargement de la carte...</Text>
-      </View>
-    );
-  }
 
   if (permissionStatus !== "granted") {
     return (
@@ -413,6 +384,14 @@ const MapScreen = () => {
         <Ionicons name="locate" size={24} color="#fff" />
       </TouchableOpacity>
 
+      <TouchableOpacity
+        style={styles.drawerButton}
+        onPress={() => setShowDrawer(true)}
+        testID="open-drawer-button"
+      >
+        <Ionicons name="list" size={24} color="#fff" />
+      </TouchableOpacity>
+
       {user && (
         <RainbowBorder>
           <TouchableOpacity
@@ -436,12 +415,10 @@ const MapScreen = () => {
         </View>
       </View>
 
-      <AddressDetailsModal
-        visible={modalVisible}
-        address={selectedAddress}
-        onClose={closeModal}
-        loading={loading}
-        onReviewAdded={handleReviewAdded}
+      <AddressDrawer
+        isVisible={showDrawer}
+        onClose={() => setShowDrawer(false)}
+        selectedAddressFromMap={selectedAddress}
       />
     </View>
   );
@@ -632,6 +609,25 @@ const styles = StyleSheet.create({
   snackbarClose: {
     padding: 4,
     marginLeft: 8,
+  },
+  drawerButton: {
+    position: "absolute",
+    bottom: 160,
+    right: 20,
+    backgroundColor: "#2ecc71",
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
 });
 
