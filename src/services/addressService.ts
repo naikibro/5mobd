@@ -265,7 +265,8 @@ class AddressService {
   async searchAddresses(
     searchQuery: string,
     visibility: "all" | "public" | "private" = "all",
-    userId?: string
+    userId?: string,
+    userLocation?: { latitude: number; longitude: number }
   ): Promise<Address[]> {
     let q = query(collection(db, "addresses"));
 
@@ -294,9 +295,74 @@ class AddressService {
       );
     }
 
+    // Filter by distance if user location is provided
+    if (userLocation) {
+      results = this.filterByDistance(results, userLocation, 30);
+    }
+
     return results.sort(
       (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
     );
+  }
+
+  // Helper method to filter addresses by distance
+  private filterByDistance(
+    addresses: Address[],
+    userLocation: { latitude: number; longitude: number },
+    maxDistanceKm: number
+  ): Address[] {
+    console.log(
+      `Filtering ${addresses.length} addresses within ${maxDistanceKm}km of (${userLocation.latitude}, ${userLocation.longitude})`
+    );
+
+    const filtered = addresses.filter((address) => {
+      const distance = this.calculateDistance(
+        userLocation.latitude,
+        userLocation.longitude,
+        address.latitude,
+        address.longitude
+      );
+      console.log(
+        `Address "${address.name}" at (${address.latitude}, ${
+          address.longitude
+        }) is ${distance.toFixed(2)}km away`
+      );
+      return distance <= maxDistanceKm;
+    });
+
+    console.log(
+      `Filtered to ${filtered.length} addresses within ${maxDistanceKm}km`
+    );
+    return filtered;
+  }
+
+  // Calculate distance between two coordinates using Haversine formula
+  private calculateDistance(
+    lat1: number,
+    lon1: number,
+    lat2: number,
+    lon2: number
+  ): number {
+    const R = 6371; // Earth's radius in kilometers
+    const dLat = this.toRadians(lat2 - lat1);
+    const dLon = this.toRadians(lon2 - lon1);
+
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(this.toRadians(lat1)) *
+        Math.cos(this.toRadians(lat2)) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const distance = R * c;
+
+    return distance;
+  }
+
+  // Convert degrees to radians
+  private toRadians(degrees: number): number {
+    return degrees * (Math.PI / 180);
   }
 }
 

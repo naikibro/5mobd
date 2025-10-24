@@ -19,6 +19,7 @@ import { useGeocoding } from "../hooks/useGeocoding";
 import { useFavorites } from "../hooks/useFavorites";
 import { useAddressStore } from "../stores/addressStore";
 import { addressService } from "../services/addressService";
+import * as Location from "expo-location";
 import { Address } from "../types/address";
 import { AddressStackParamList } from "../types/navigation";
 
@@ -36,21 +37,111 @@ const AddressListScreen = () => {
   const [streetNames, setStreetNames] = useState<Map<string, string>>(
     new Map()
   );
+  const [userLocation, setUserLocation] =
+    useState<Location.LocationObject | null>(null);
   const processedAddresses = useRef(new Set<string>());
+
+  // Get user location on mount
+  useEffect(() => {
+    const getUserLocation = async () => {
+      try {
+        // Check if location services are enabled
+        const enabled = await Location.hasServicesEnabledAsync();
+        if (!enabled) {
+          console.log("Location services are disabled");
+          return;
+        }
+
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        console.log("Location permission status:", status);
+
+        if (status === "granted") {
+          const location = await Location.getCurrentPositionAsync({
+            accuracy: Location.Accuracy.Balanced,
+          });
+          console.log("User location obtained:", location.coords);
+          setUserLocation(location);
+        } else {
+          console.log("Location permission denied, status:", status);
+          // For simulator testing, set a default Paris location
+          if (__DEV__) {
+            console.log("Setting default Paris location for simulator");
+            setUserLocation({
+              coords: {
+                latitude: 48.8566,
+                longitude: 2.3522,
+                altitude: null,
+                accuracy: 100,
+                altitudeAccuracy: null,
+                heading: null,
+                speed: null,
+              },
+              timestamp: Date.now(),
+            } as Location.LocationObject);
+          }
+        }
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error("Error getting location:", error);
+
+        // For simulator testing, set a default Paris location
+        if (__DEV__) {
+          console.log(
+            "Setting default Paris location for simulator due to error"
+          );
+          setUserLocation({
+            coords: {
+              latitude: 48.8566,
+              longitude: 2.3522,
+              altitude: null,
+              accuracy: 100,
+              altitudeAccuracy: null,
+              heading: null,
+              speed: null,
+            },
+            timestamp: Date.now(),
+          } as Location.LocationObject);
+        }
+      }
+    };
+    getUserLocation();
+  }, []);
 
   const loadAddresses = useCallback(async () => {
     try {
-      const publicAddresses = await addressService.getPublicAddresses();
-      setAddresses(publicAddresses);
+      // Only load addresses if we have user location (for distance filtering)
+      if (userLocation) {
+        console.log(
+          "Filtering addresses with user location:",
+          userLocation.coords
+        );
+        const filteredAddresses = await addressService.searchAddresses(
+          "", // Empty search query to get all addresses
+          "public",
+          undefined,
+          {
+            latitude: userLocation.coords.latitude,
+            longitude: userLocation.coords.longitude,
+          }
+        );
+        console.log(
+          "Filtered addresses (within 30km):",
+          filteredAddresses.length
+        );
+        setAddresses(filteredAddresses);
+      } else {
+        console.log("No user location yet, waiting...");
+        // Don't load addresses until we have location
+      }
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error("Error loading addresses:", error);
     }
-  }, []);
+  }, [userLocation]);
 
   useEffect(() => {
     loadAddresses();
-  }, []);
+  }, [loadAddresses]);
 
   // Refresh addresses when screen comes into focus
   useEffect(() => {
@@ -58,14 +149,11 @@ const AddressListScreen = () => {
       loadAddresses();
     };
 
-    // Refresh immediately
-    refreshOnFocus();
-
-    // Set up interval to refresh every 5 seconds to catch new public addresses
-    const interval = setInterval(refreshOnFocus, 5000);
-
-    return () => clearInterval(interval);
-  }, [loadAddresses]);
+    // Only refresh if we have location
+    if (userLocation) {
+      refreshOnFocus();
+    }
+  }, [loadAddresses, userLocation]);
 
   const loadStreetNames = useCallback(async () => {
     if (addresses.length === 0) return;
@@ -123,10 +211,17 @@ const AddressListScreen = () => {
     if (query.trim()) {
       setIsSearching(true);
       try {
-        // Search only in public addresses
+        // Search only in public addresses within 30km
         const searchResults = await addressService.searchAddresses(
           query,
-          "public"
+          "public",
+          undefined,
+          userLocation
+            ? {
+                latitude: userLocation.coords.latitude,
+                longitude: userLocation.coords.longitude,
+              }
+            : undefined
         );
         setAddresses(searchResults);
       } catch (error) {
