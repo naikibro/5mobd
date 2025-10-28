@@ -1,6 +1,5 @@
 <div align="center">
-  <img src="./assets/pk.png" alt="Air Tahiti Logo" width="400"/>
-  
+
   <h1>5mobd - Address Sharing App</h1>
   <p>
     <b>A React Native app for sharing and discovering addresses with reviews, built with Expo and Firebase.</b><br/>
@@ -14,6 +13,37 @@
     <a href="https://zustand-demo.pmnd.rs/"><img src="https://img.shields.io/badge/Zustand-4.x-purple" alt="Zustand"/></a>
     <a href="https://www.typescriptlang.org/"><img src="https://img.shields.io/badge/TypeScript-5.x-blue" alt="TypeScript"/></a>
   </p>
+</div>
+
+## 📱 Download
+
+<div align="center">
+  <table>
+    <tr>
+      <th>Platform</th>
+      <th>Download Link</th>
+    </tr>
+    <tr>
+      <td>
+        <img src="https://img.shields.io/badge/Android-3DDC84?logo=android&logoColor=white" alt="Android"/>
+      </td>
+      <td>
+        <a href="https://drive.google.com/file/d/1A_G5nvHnwtlruWBsq7XU4RjNSg11GUkT/view?usp=sharing">
+          Download APK
+        </a>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <img src="https://img.shields.io/badge/iOS-000000?logo=ios&logoColor=white" alt="iOS"/>
+      </td>
+      <td>
+        <a href="https://drive.google.com/file/d/1NLelQ-63vm6YR3B2C01UYPETVbZocok6/view?usp=sharing">
+          Download IPA
+        </a>
+      </td>
+    </tr>
+  </table>
 </div>
 
 ## Features
