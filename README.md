@@ -54,14 +54,15 @@ cp .env.example .env
 ### 4. Run the App
 
 ```bash
-npm start
+yarn
+yarn start
 ```
 
 Then scan the QR code with Expo Go app on your phone, or press `i` for iOS simulator / `a` for Android emulator.
 
 ## Development
 
-- `npm start` - Start Expo development server
-- `npm run android` - Run on Android
-- `npm run ios` - Run on iOS
-- `npm test` - Run tests
+- `yarn start` - Start Expo development server
+- `yarn run android` - Run on Android
+- `yarn run ios` - Run on iOS
+- `yarn test` - Run tests
