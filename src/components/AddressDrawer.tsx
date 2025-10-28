@@ -103,12 +103,6 @@ const AddressDrawer: React.FC<AddressDrawerProps> = ({
   useEffect(() => {
     if (addresses.length === 0) return;
 
-    console.log(
-      "AddressDrawer: Starting to load street names for",
-      addresses.length,
-      "addresses"
-    );
-
     const loadStreetNames = async () => {
       const newStreetNames: string[] = [];
 
@@ -122,24 +116,11 @@ const AddressDrawer: React.FC<AddressDrawerProps> = ({
           processedAddresses.current.add(key);
 
           try {
-            console.log(
-              "Calling getStreetName for:",
-              address.name,
-              "at",
-              address.latitude,
-              address.longitude
-            );
             const streetName = await getStreetName({
               latitude: address.latitude,
               longitude: address.longitude,
             });
 
-            console.log(
-              "Got street name result:",
-              streetName,
-              "for",
-              address.name
-            );
             if (streetName) {
               newStreetNames.push(key, streetName);
             }
@@ -149,24 +130,14 @@ const AddressDrawer: React.FC<AddressDrawerProps> = ({
         }
       }
 
-      console.log("New street names to add:", newStreetNames.length / 2);
       if (newStreetNames.length > 0) {
         setStreetNames((prev) => {
           const updated = new Map(prev);
           for (let i = 0; i < newStreetNames.length; i += 2) {
             updated.set(newStreetNames[i], newStreetNames[i + 1]);
-            console.log(
-              "Added to map:",
-              newStreetNames[i],
-              "->",
-              newStreetNames[i + 1]
-            );
           }
-          console.log("Updated streetNames map size:", updated.size);
           return updated;
         });
-      } else {
-        console.log("No street names to add");
       }
     };
 
