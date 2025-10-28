@@ -10,11 +10,11 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "build": "eas build --local --profile development",
+    "build": "expo prebuild && sed -i '' 's/react-native-google-maps/react-native-maps/g' ios/Podfile && eas build --local --profile development",
     "compile": "tsc --noEmit",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx --fix",
-    "prebuild": "expo prebuild"
+    "prebuild": "expo prebuild && sed -i '' 's/react-native-google-maps/react-native-maps/g' ios/Podfile"
   },
   "dependencies": {
     "@expo/metro-config": "^54.0.6",
@@ -37,7 +37,7 @@
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-native": "0.81.5",
-    "react-native-maps": "^1.22.0",
+    "react-native-maps": "1.20.1",
     "react-native-safe-area-context": "^5.6.1",
     "react-native-screens": "^4.16.0",
     "react-native-web": "^0.21.0",
