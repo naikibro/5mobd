@@ -168,6 +168,17 @@ const AddressDrawer: React.FC<AddressDrawerProps> = ({
     [getAddressWithReviews, getStreetName]
   );
 
+  const handleRefreshDetails = useCallback(async () => {
+    if (!selectedAddress) return;
+
+    try {
+      const details = await getAddressWithReviews(selectedAddress.id);
+      setAddressWithReviews(details);
+    } catch (error) {
+      console.error("Error refreshing address details:", error);
+    }
+  }, [selectedAddress, getAddressWithReviews]);
+
   const handleSearch = useCallback(
     async (query: string) => {
       setSearchQuery(query);
@@ -293,6 +304,7 @@ const AddressDrawer: React.FC<AddressDrawerProps> = ({
               detailsLoading={detailsLoading}
               streetAddress={streetAddress}
               onBackToList={handleBackToList}
+              onRefresh={handleRefreshDetails}
             />
           )}
         </Animated.View>

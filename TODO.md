@@ -1,5 +1,7 @@
 # TODO
 
-- ✅ in the my adresse page
-  - ✅ use the same list of cards used in the map page drawer
-  - ✅ kepp the searchbar and filtering as is
+✅ Done: Navigation from "Mes adresses" to map with address details
+
+- Clicking an address in "Mes adresses" now navigates to the map page
+- The map centers on the selected address and opens the details drawer automatically
+- Clean navigation flow with proper parameter passing

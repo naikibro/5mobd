@@ -4,18 +4,28 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   TextInput,
   ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+import { CompositeNavigationProp } from "@react-navigation/native";
+import { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import AddressList from "../components/AddressList";
 import { useMyAddresses } from "../hooks/useMyAddresses";
 import { useFavorites } from "../hooks/useFavorites";
 import { Address } from "../types/address";
+import { RootStackParamList, MainTabParamList } from "../types/navigation";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+type NavigationProp = CompositeNavigationProp<
+  BottomTabNavigationProp<MainTabParamList, "MyAddresses">,
+  NativeStackNavigationProp<RootStackParamList>
+>;
+
 const MyAddressesScreen = () => {
+  const navigation = useNavigation<NavigationProp>();
   const { toggleFavorite, isFavoriteLocal } = useFavorites();
   const {
     loading,
@@ -97,16 +107,7 @@ const MyAddressesScreen = () => {
   };
 
   const handleAddressPress = (address: Address) => {
-    // For now, we'll just show an alert. In the future, this could navigate to a details screen
-    Alert.alert(
-      "Détails de l'adresse",
-      `${address.name}\n\n${
-        address.description
-      }\n\nCoordonnées: ${address.latitude.toFixed(
-        4
-      )}, ${address.longitude.toFixed(4)}`,
-      [{ text: "OK" }]
-    );
+    navigation.navigate("Map", { addressId: address.id });
   };
 
   const handleFavoritePress = async (addressId: string) => {
