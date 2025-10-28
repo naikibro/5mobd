@@ -41,7 +41,6 @@ const MapScreen = () => {
   const [permissionStatus, setPermissionStatus] = useState<string>("");
   const [selectedAddress, setSelectedAddress] =
     useState<AddressWithReviews | null>(null);
-  const [mapRegion, setMapRegion] = useState<Region | null>(null);
   const [allowedRegion, setAllowedRegion] = useState<Region | null>(null);
   const [showSnackbar, setShowSnackbar] = useState<boolean>(false);
   const [showDrawer, setShowDrawer] = useState<boolean>(false);
@@ -100,30 +99,33 @@ const MapScreen = () => {
 
   // Handle region change and enforce geofencing
   const handleRegionChange = (region: Region) => {
-    if (isRegionAllowed(region)) {
-      setMapRegion(region);
-    } else {
-      // Show snackbar notification
-      setShowSnackbar(true);
-      Animated.timing(snackbarAnimation, {
-        toValue: 1,
-        duration: 300,
-        useNativeDriver: true,
-      }).start();
-
-      setTimeout(() => {
+    // Only enforce geofencing if user has moved significantly outside bounds
+    if (!isRegionAllowed(region)) {
+      // Show snackbar notification only once
+      if (!showSnackbar) {
+        setShowSnackbar(true);
         Animated.timing(snackbarAnimation, {
-          toValue: 0,
+          toValue: 1,
           duration: 300,
           useNativeDriver: true,
-        }).start(() => {
-          setShowSnackbar(false);
-        });
-      }, 4000); // Hide snackbar after 4 seconds
+        }).start();
 
-      // Snap back to the allowed region
+        setTimeout(() => {
+          Animated.timing(snackbarAnimation, {
+            toValue: 0,
+            duration: 300,
+            useNativeDriver: true,
+          }).start(() => {
+            setShowSnackbar(false);
+          });
+        }, 4000); // Hide snackbar after 4 seconds
+      }
+
+      // Snap back to the allowed region gently
       if (mapRef.current && allowedRegion) {
-        mapRef.current.animateToRegion(allowedRegion, 1000);
+        setTimeout(() => {
+          mapRef.current?.animateToRegion(allowedRegion, 500);
+        }, 100);
       }
     }
   };
@@ -335,13 +337,10 @@ const MapScreen = () => {
         ref={mapRef}
         style={styles.map}
         initialRegion={getInitialRegion()}
-        region={mapRegion || getInitialRegion()}
         onRegionChangeComplete={handleRegionChange}
         showsUserLocation={true}
         showsMyLocationButton={false}
         showsScale={true}
-        showsPointsOfInterests
-        followsUserLocation={true}
         mapType="mutedStandard"
         provider="google"
         testID="map-screen"

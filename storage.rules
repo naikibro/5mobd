@@ -2,33 +2,65 @@ rules_version = '2';
 
 service firebase.storage {
   match /b/{bucket}/o {
-    // User profile photos - users can read/write their own photos
-    match /profile-photos/{userId}/{fileName} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
     }
     
-    // Address photos - users can read all, write their own
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isImage() {
+      return request.resource.contentType.matches('image/.*');
+    }
+    
+    function isValidImageSize() {
+      return request.resource.size < 5 * 1024 * 1024; // 5MB max
+    }
+    
+    function isValidImage() {
+      return isImage() && isValidImageSize();
+    }
+    
+    // User profile photos - users can read all, write/delete their own with validation
+    match /profile-photos/{userId}/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner(userId) && isValidImage();
+      allow delete: if isOwner(userId);
+    }
+    
+    // Address photos - users can read all, write/delete their own with validation
     match /addresses/{userId}/{fileName} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null && request.auth.uid == userId;
+      allow read: if isAuthenticated();
+      allow write: if isOwner(userId) && isValidImage();
+      allow delete: if isOwner(userId);
     }
     
     // Test files - allow authenticated users to write for testing
     match /test/{userId}/{fileName} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read: if isOwner(userId);
+      allow write: if isOwner(userId) && isValidImageSize();
+      allow delete: if isOwner(userId);
     }
     
-    // Legacy address photos path - users can read all, write their own
+    // Legacy address photos path - users can read all, write their own with validation
     match /address-photos/{addressId}/{fileName} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null && 
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && 
+        isValidImage() &&
+        firestore.get(/databases/(default)/documents/addresses/{addressId}).data.userId == request.auth.uid;
+      allow delete: if isAuthenticated() &&
         firestore.get(/databases/(default)/documents/addresses/{addressId}).data.userId == request.auth.uid;
     }
     
-    // Review photos - users can read all, write their own
+    // Review photos - users can read all, write their own with validation
     match /review-photos/{reviewId}/{fileName} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null && 
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && 
+        isValidImage() &&
+        firestore.get(/databases/(default)/documents/reviews/{reviewId}).data.userId == request.auth.uid;
+      allow delete: if isAuthenticated() &&
         firestore.get(/databases/(default)/documents/reviews/{reviewId}).data.userId == request.auth.uid;
     }
     
