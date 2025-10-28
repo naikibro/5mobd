@@ -312,10 +312,6 @@ class AddressService {
     userLocation: { latitude: number; longitude: number },
     maxDistanceKm: number
   ): Address[] {
-    console.log(
-      `Filtering ${addresses.length} addresses within ${maxDistanceKm}km of (${userLocation.latitude}, ${userLocation.longitude})`
-    );
-
     const filtered = addresses.filter((address) => {
       const distance = this.calculateDistance(
         userLocation.latitude,
@@ -323,17 +319,9 @@ class AddressService {
         address.latitude,
         address.longitude
       );
-      console.log(
-        `Address "${address.name}" at (${address.latitude}, ${
-          address.longitude
-        }) is ${distance.toFixed(2)}km away`
-      );
       return distance <= maxDistanceKm;
     });
 
-    console.log(
-      `Filtered to ${filtered.length} addresses within ${maxDistanceKm}km`
-    );
     return filtered;
   }
 
