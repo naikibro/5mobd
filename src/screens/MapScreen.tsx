@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import * as Location from "expo-location";
 import React, {
@@ -24,9 +24,11 @@ import AddressDrawer from "../components/AddressDrawer";
 import { useAddressStore } from "../stores/addressStore";
 import { useAuthStore } from "../stores/authStore";
 import { Address, AddressWithReviews } from "../types/address";
-import { RootStackParamList } from "../types/navigation";
+import { RootStackParamList, MainTabParamList } from "../types/navigation";
 
 const { width, height } = Dimensions.get("window");
+
+type MapScreenRouteProp = RouteProp<MainTabParamList, "Map">;
 
 const MapScreen = () => {
   const { fetchMapAddresses, getAddressWithReviews, addresses } =
@@ -34,6 +36,7 @@ const MapScreen = () => {
   const { user } = useAuthStore();
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const route = useRoute<MapScreenRouteProp>();
   const [location, setLocation] = useState<Location.LocationObject | null>(
     null
   );
@@ -263,6 +266,42 @@ const MapScreen = () => {
     },
     [getAddressWithReviews, isProcessingMarker]
   );
+
+  // Handle navigation from MyAddresses screen
+  useEffect(() => {
+    const handleAddressNavigation = async () => {
+      if (route.params?.addressId) {
+        const addressId = route.params.addressId;
+
+        // Wait for addresses to be loaded
+        if (addresses.length === 0) {
+          return;
+        }
+
+        // Find the address
+        const address = addresses.find((addr) => addr.id === addressId);
+        if (address) {
+          // Center map on address
+          if (mapRef.current) {
+            mapRef.current.animateToRegion({
+              latitude: address.latitude,
+              longitude: address.longitude,
+              latitudeDelta: 0.01,
+              longitudeDelta: 0.01,
+            });
+          }
+
+          // Open drawer with address details
+          await handleMarkerPress(address);
+        }
+
+        // Clear the parameter
+        navigation.setParams({ addressId: undefined } as any);
+      }
+    };
+
+    handleAddressNavigation();
+  }, [route.params?.addressId, addresses, handleMarkerPress, navigation]);
 
   const renderMarkers = useMemo(() => {
     return addresses.map((address) => (

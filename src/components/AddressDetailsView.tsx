@@ -13,6 +13,8 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import * as ImagePicker from "expo-image-picker";
+import * as ImageManipulator from "expo-image-manipulator";
 import FullsizeImageCarousel from "./FullsizeImageCarousel";
 import { useAddressStore } from "../stores/addressStore";
 import { useAuthStore } from "../stores/authStore";
@@ -25,6 +27,7 @@ interface AddressDetailsViewProps {
   detailsLoading: boolean;
   streetAddress: string | null;
   onBackToList: () => void;
+  onRefresh?: () => Promise<void>;
 }
 
 const AddressDetailsView: React.FC<AddressDetailsViewProps> = ({
@@ -33,6 +36,7 @@ const AddressDetailsView: React.FC<AddressDetailsViewProps> = ({
   detailsLoading,
   streetAddress,
   onBackToList,
+  onRefresh,
 }) => {
   const { user } = useAuthStore();
   const { deleteAddress, createReview } = useAddressStore();
@@ -42,6 +46,8 @@ const AddressDetailsView: React.FC<AddressDetailsViewProps> = ({
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
   const [submittingReview, setSubmittingReview] = useState(false);
+  const [selectedImages, setSelectedImages] = useState<string[]>([]);
+  const [uploadingImages, setUploadingImages] = useState(false);
 
   const renderStars = (rating: number) => {
     const stars = [];
@@ -139,6 +145,116 @@ const AddressDetailsView: React.FC<AddressDetailsViewProps> = ({
     );
   };
 
+  const requestPermissions = async () => {
+    if (Platform.OS !== "web") {
+      const { status } =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert(
+          "Permission requise",
+          "Nous avons besoin de votre permission pour accéder à vos photos."
+        );
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const pickImages = async () => {
+    const hasPermission = await requestPermissions();
+    if (!hasPermission) return;
+
+    if (selectedImages.length >= 5) {
+      Alert.alert("Limite atteinte", "Vous pouvez ajouter jusqu'à 5 images.");
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsMultipleSelection: true,
+      quality: 0.8,
+      selectionLimit: 5 - selectedImages.length,
+    });
+
+    if (!result.canceled && result.assets.length > 0) {
+      const newImages = result.assets.map((asset) => asset.uri);
+      setSelectedImages([...selectedImages, ...newImages]);
+    }
+  };
+
+  const takePhoto = async () => {
+    const hasPermission = await requestPermissions();
+    if (!hasPermission) return;
+
+    if (selectedImages.length >= 5) {
+      Alert.alert("Limite atteinte", "Vous pouvez ajouter jusqu'à 5 images.");
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      setSelectedImages([...selectedImages, result.assets[0].uri]);
+    }
+  };
+
+  const removeImage = (index: number) => {
+    setSelectedImages(selectedImages.filter((_, i) => i !== index));
+  };
+
+  const showImageOptions = () => {
+    Alert.alert(
+      "Ajouter des photos",
+      "Comment souhaitez-vous ajouter des photos ?",
+      [
+        { text: "Annuler", style: "cancel" },
+        { text: "Prendre une photo", onPress: takePhoto },
+        { text: "Choisir dans la galerie", onPress: pickImages },
+      ]
+    );
+  };
+
+  const uploadReviewImages = async (): Promise<string[]> => {
+    if (selectedImages.length === 0) return [];
+
+    const uploadedUrls: string[] = [];
+
+    for (const imageUri of selectedImages) {
+      try {
+        const manipulatedImage = await ImageManipulator.manipulateAsync(
+          imageUri,
+          [{ resize: { width: 800 } }],
+          { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG }
+        );
+
+        const fileName = `review_${Date.now()}_${Math.random()
+          .toString(36)
+          .substring(7)}.jpg`;
+        const storagePath = `reviews/${selectedAddress?.id}/${fileName}`;
+
+        const response = await fetch(manipulatedImage.uri);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch image: ${response.status}`);
+        }
+
+        const blob = await response.blob();
+        if (blob.size === 0) {
+          throw new Error("Blob is empty");
+        }
+
+        const { uploadPhoto } = useAddressStore.getState();
+        const downloadURL = await uploadPhoto(blob, storagePath);
+        uploadedUrls.push(downloadURL);
+      } catch (error) {
+        console.error("Error uploading image:", error);
+      }
+    }
+
+    return uploadedUrls;
+  };
+
   const handleSubmitReview = async () => {
     if (!selectedAddress || !user) return;
 
@@ -154,6 +270,14 @@ const AddressDetailsView: React.FC<AddressDetailsViewProps> = ({
 
     setSubmittingReview(true);
     try {
+      let photoUrls: string[] = [];
+
+      if (selectedImages.length > 0) {
+        setUploadingImages(true);
+        photoUrls = await uploadReviewImages();
+        setUploadingImages(false);
+      }
+
       await createReview({
         addressId: selectedAddress.id,
         rating,
@@ -161,26 +285,27 @@ const AddressDetailsView: React.FC<AddressDetailsViewProps> = ({
         userId: user.uid,
         userDisplayName: user.displayName || "Utilisateur",
         userPhotoURL: user.photoURL || undefined,
-        photos: [],
+        photos: photoUrls,
       });
 
-      // Automatically add to favorites when adding a review
-      try {
-        const wasFavorite = isFavoriteLocal(selectedAddress.id);
-        await toggleFavorite(selectedAddress.id);
-
-        if (!wasFavorite) {
-          Alert.alert("Adresse ajoutée aux favoris⭐️", "", [], {
-            cancelable: true,
-          });
+      const wasFavorite = isFavoriteLocal(selectedAddress.id);
+      if (!wasFavorite) {
+        try {
+          await toggleFavorite(selectedAddress.id);
+        } catch (error) {
+          console.error("Error adding to favorites:", error);
         }
-      } catch (error) {
-        console.error("Error adding to favorites:", error);
+      }
+
+      if (onRefresh) {
+        await onRefresh();
       }
 
       Alert.alert(
         "Succès",
-        "Votre avis a été ajouté avec succès et l'adresse a été ajoutée à vos favoris",
+        wasFavorite
+          ? "Votre avis a été ajouté avec succès"
+          : "Votre avis a été ajouté avec succès et l'adresse a été ajoutée à vos favoris",
         [
           {
             text: "OK",
@@ -188,6 +313,7 @@ const AddressDetailsView: React.FC<AddressDetailsViewProps> = ({
               setShowReviewModal(false);
               setRating(0);
               setComment("");
+              setSelectedImages([]);
             },
           },
         ]
@@ -196,6 +322,7 @@ const AddressDetailsView: React.FC<AddressDetailsViewProps> = ({
       Alert.alert("Erreur", "Impossible d'ajouter votre avis");
     } finally {
       setSubmittingReview(false);
+      setUploadingImages(false);
     }
   };
 
@@ -437,16 +564,60 @@ const AddressDetailsView: React.FC<AddressDetailsViewProps> = ({
                 textAlignVertical="top"
               />
 
+              <Text style={styles.reviewFormLabel}>
+                Photos{" "}
+                {selectedImages.length > 0 && `(${selectedImages.length}/5)`}
+              </Text>
+              <View style={styles.photosSection}>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                  {selectedImages.map((imageUri, index) => (
+                    <View key={index} style={styles.imagePreviewContainer}>
+                      <Image
+                        source={{ uri: imageUri }}
+                        style={styles.imagePreview}
+                      />
+                      <TouchableOpacity
+                        style={styles.removeImageButton}
+                        onPress={() => removeImage(index)}
+                      >
+                        <Ionicons
+                          name="close-circle"
+                          size={24}
+                          color="#e74c3c"
+                        />
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                  {selectedImages.length < 5 && (
+                    <TouchableOpacity
+                      style={styles.addImageButton}
+                      onPress={showImageOptions}
+                    >
+                      <Ionicons name="camera" size={32} color="#2ecc71" />
+                      <Text style={styles.addImageText}>Ajouter</Text>
+                    </TouchableOpacity>
+                  )}
+                </ScrollView>
+              </View>
+
               <TouchableOpacity
                 style={[
                   styles.submitButton,
-                  submittingReview && styles.submitButtonDisabled,
+                  (submittingReview || uploadingImages) &&
+                    styles.submitButtonDisabled,
                 ]}
                 onPress={handleSubmitReview}
-                disabled={submittingReview}
+                disabled={submittingReview || uploadingImages}
               >
-                {submittingReview ? (
-                  <ActivityIndicator size="small" color="#fff" />
+                {submittingReview || uploadingImages ? (
+                  <View style={styles.loadingButtonContainer}>
+                    <ActivityIndicator size="small" color="#fff" />
+                    <Text style={styles.submitButtonText}>
+                      {uploadingImages
+                        ? "Envoi des photos..."
+                        : "Publication..."}
+                    </Text>
+                  </View>
                 ) : (
                   <Text style={styles.submitButtonText}>Publier l'avis</Text>
                 )}
@@ -773,6 +944,48 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     fontWeight: "600",
+  },
+  photosSection: {
+    marginBottom: 16,
+  },
+  imagePreviewContainer: {
+    position: "relative",
+    marginRight: 12,
+  },
+  imagePreview: {
+    width: 100,
+    height: 100,
+    borderRadius: 8,
+    backgroundColor: "#f0f0f0",
+  },
+  removeImageButton: {
+    position: "absolute",
+    top: -8,
+    right: -8,
+    backgroundColor: "#fff",
+    borderRadius: 12,
+  },
+  addImageButton: {
+    width: 100,
+    height: 100,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: "#2ecc71",
+    borderStyle: "dashed",
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f8f9fa",
+  },
+  addImageText: {
+    marginTop: 4,
+    fontSize: 12,
+    color: "#2ecc71",
+    fontWeight: "500",
+  },
+  loadingButtonContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
 });
 
