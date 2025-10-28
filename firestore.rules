@@ -48,14 +48,14 @@ service cloud.firestore {
       
       // Allow delete only by owner
       allow delete: if isAuthenticated() && isOwner(resource.data.userId);
-      
-      // Favorites subcollection (ADDED: missing rules)
-      match /favorites/{userId} {
-        allow read: if isAuthenticated();
-        allow create: if isOwner(userId);
-        allow delete: if isOwner(userId);
-        allow update: if false; // No updates needed for favorites
-      }
+    }
+    
+    // Favorites collection (root level)
+    match /favorites/{favoriteId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isOwner(request.resource.data.userId);
+      allow delete: if isAuthenticated();
+      allow update: if false;
     }
     
     // Reviews collection

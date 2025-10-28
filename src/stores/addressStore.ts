@@ -10,9 +10,10 @@ interface AddressState {
   error: string | null;
   pollingInterval: NodeJS.Timeout | null;
   isPolling: boolean;
+  currentUserId: string | undefined;
 
   // Actions
-  startPolling: () => void;
+  startPolling: (userId?: string) => void;
   stopPolling: () => void;
   fetchAddresses: () => Promise<void>;
   fetchUserAddresses: (userId: string) => Promise<void>;
@@ -23,6 +24,7 @@ interface AddressState {
   silentFetchAddresses: () => Promise<void>;
   silentFetchUserAddresses: (userId: string) => Promise<void>;
   silentFetchPublicAddresses: () => Promise<void>;
+  silentFetchMapAddresses: (userId?: string) => Promise<void>;
   createAddress: (
     addressData: Omit<Address, "id" | "createdAt" | "updatedAt">
   ) => Promise<string>;
@@ -56,16 +58,20 @@ export const useAddressStore = create<AddressState>((set, get) => ({
   error: null,
   pollingInterval: null,
   isPolling: false,
+  currentUserId: undefined,
 
-  startPolling: () => {
-    const { stopPolling, silentFetchAddresses } = get();
+  startPolling: (userId?: string) => {
+    const { stopPolling, silentFetchMapAddresses } = get();
 
     // Stop existing polling if any
     stopPolling();
 
+    // Store the userId for polling
+    set({ currentUserId: userId });
+
     // Start new polling every 5 seconds
     const interval = setInterval(() => {
-      silentFetchAddresses();
+      silentFetchMapAddresses(userId);
     }, 5000);
 
     set({ pollingInterval: interval, isPolling: true });
@@ -195,6 +201,22 @@ export const useAddressStore = create<AddressState>((set, get) => ({
     }
   },
 
+  silentFetchMapAddresses: async (userId?: string) => {
+    try {
+      const newAddresses = await addressService.getMapAddresses(userId);
+      const { addresses: currentAddresses } = get();
+
+      // Only update if addresses are different
+      if (JSON.stringify(newAddresses) !== JSON.stringify(currentAddresses)) {
+        set({ addresses: newAddresses });
+      }
+    } catch (error: any) {
+      // Silent fail for polling - don't show errors
+      // eslint-disable-next-line no-console
+      console.warn("Silent fetch map addresses failed:", error.message);
+    }
+  },
+
   createAddress: async (
     addressData: Omit<Address, "id" | "createdAt" | "updatedAt">
   ) => {
@@ -202,8 +224,9 @@ export const useAddressStore = create<AddressState>((set, get) => ({
       set({ loading: true, error: null });
       const addressId = await addressService.createAddress(addressData);
 
-      // Refetch addresses after creation
-      await get().fetchAddresses();
+      // Refetch addresses after creation (use map addresses to include private)
+      const { currentUserId } = get();
+      await get().fetchMapAddresses(currentUserId);
 
       set({ loading: false });
       return addressId;
@@ -218,8 +241,9 @@ export const useAddressStore = create<AddressState>((set, get) => ({
       set({ loading: true, error: null });
       await addressService.updateAddress(id, updates);
 
-      // Refetch addresses after update
-      await get().fetchAddresses();
+      // Refetch addresses after update (use map addresses to include private)
+      const { currentUserId } = get();
+      await get().fetchMapAddresses(currentUserId);
 
       set({ loading: false });
     } catch (error: any) {
@@ -233,8 +257,9 @@ export const useAddressStore = create<AddressState>((set, get) => ({
       set({ loading: true, error: null });
       await addressService.deleteAddress(id);
 
-      // Refetch addresses after deletion
-      await get().fetchAddresses();
+      // Refetch addresses after deletion (use map addresses to include private)
+      const { currentUserId } = get();
+      await get().fetchMapAddresses(currentUserId);
 
       set({ loading: false });
     } catch (error: any) {

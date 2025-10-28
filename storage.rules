@@ -64,6 +64,13 @@ service firebase.storage {
         firestore.get(/databases/(default)/documents/reviews/{reviewId}).data.userId == request.auth.uid;
     }
     
+    // Review photos for addresses - authenticated users can read all, write their own with validation
+    match /reviews/{addressId}/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && isValidImage();
+      allow delete: if isAuthenticated();
+    }
+    
     // Deny all other access
     match /{allPaths=**} {
       allow read, write: if false;

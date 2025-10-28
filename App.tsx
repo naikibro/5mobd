@@ -98,7 +98,7 @@ function AppNavigator() {
   useEffect(() => {
     // Start polling when user is authenticated
     if (user) {
-      startPolling();
+      startPolling(user.uid);
     } else {
       stopPolling();
     }
