@@ -2,44 +2,91 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isValidRating(rating) {
+      return rating is int && rating >= 1 && rating <= 5;
+    }
+    
     // Users collection - users can read/write their own data
     match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read, write: if isOwner(userId);
     }
     
     // Addresses collection
     match /addresses/{addressId} {
       // Allow read if address is public OR user is the owner
-      allow read: if request.auth != null && 
-        (resource.data.isPublic == true || resource.data.userId == request.auth.uid);
+      allow read: if isAuthenticated() && 
+        (resource.data.isPublic == true || isOwner(resource.data.userId));
       
-      // Allow create if user is authenticated
-      allow create: if request.auth != null && 
-        request.auth.uid == resource.data.userId;
+      // Allow create with validation (FIXED: using request.resource instead of resource)
+      allow create: if isAuthenticated() && 
+        isOwner(request.resource.data.userId) &&
+        request.resource.data.name is string &&
+        request.resource.data.name.size() > 0 &&
+        request.resource.data.name.size() <= 100 &&
+        request.resource.data.latitude is number &&
+        request.resource.data.latitude >= -90 && request.resource.data.latitude <= 90 &&
+        request.resource.data.longitude is number &&
+        request.resource.data.longitude >= -180 && request.resource.data.longitude <= 180 &&
+        request.resource.data.isPublic is bool &&
+        request.resource.data.photos is list &&
+        request.resource.data.photos.size() <= 5;
       
-      // Allow update/delete only if user is the owner
-      allow update, delete: if request.auth != null && 
-        resource.data.userId == request.auth.uid;
+      // Allow update only by owner, prevent changing userId and createdAt
+      allow update: if isAuthenticated() && 
+        isOwner(resource.data.userId) &&
+        request.resource.data.userId == resource.data.userId &&
+        request.resource.data.createdAt == resource.data.createdAt;
+      
+      // Allow delete only by owner
+      allow delete: if isAuthenticated() && isOwner(resource.data.userId);
+      
+      // Favorites subcollection (ADDED: missing rules)
+      match /favorites/{userId} {
+        allow read: if isAuthenticated();
+        allow create: if isOwner(userId);
+        allow delete: if isOwner(userId);
+        allow update: if false; // No updates needed for favorites
+      }
     }
     
     // Reviews collection
     match /reviews/{reviewId} {
       // Allow read for all authenticated users
-      allow read: if request.auth != null;
+      allow read: if isAuthenticated();
       
-      // Allow create if user is authenticated and owns the review
-      allow create: if request.auth != null && 
-        request.auth.uid == resource.data.userId;
+      // Allow create with validation (FIXED: using request.resource instead of resource)
+      allow create: if isAuthenticated() && 
+        isOwner(request.resource.data.userId) &&
+        request.resource.data.addressId is string &&
+        request.resource.data.rating is int &&
+        isValidRating(request.resource.data.rating) &&
+        request.resource.data.userDisplayName is string &&
+        request.resource.data.photos is list &&
+        request.resource.data.photos.size() <= 10;
       
-      // Allow update/delete only if user is the owner
-      allow update, delete: if request.auth != null && 
-        resource.data.userId == request.auth.uid;
+      // Allow update/delete only by owner, prevent changing immutable fields
+      allow update: if isAuthenticated() && 
+        isOwner(resource.data.userId) &&
+        request.resource.data.userId == resource.data.userId &&
+        request.resource.data.addressId == resource.data.addressId &&
+        request.resource.data.createdAt == resource.data.createdAt;
+        
+      allow delete: if isAuthenticated() && isOwner(resource.data.userId);
     }
     
     // User profiles collection (for profile photos and additional user data)
     match /userProfiles/{userId} {
       // Allow read/write only if user is the owner
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read, write: if isOwner(userId);
     }
     
     // Deny all other access
