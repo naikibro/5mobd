@@ -15,6 +15,53 @@
   </p>
 </div>
 
+## 🏗️ Architecture Overview
+
+```mermaid
+flowchart TD
+    A[Expo mobile app] --> B[Zustand State Management]
+    B --> C[Services Layer]
+    C --> D[Firebase Backend]
+    C --> E[Google Maps API]
+    D --> F[Firestore]
+    D --> G[Firebase auth]
+    A --> h[testing]
+    h -- unit testing --> H1[Jest]
+    h -- e2e  --> H2[Maestro]
+
+
+    F --> D1[(users)]
+    F --> D2[(userProfiles)]
+    F --> D3[(addresses)]
+    F --> D4[(favorites)]
+    F --> D5[(reviews)]
+
+    style A fill:#61dafb,color:#fff
+    style B fill:#443266,color:#fff
+    style D fill:#ffce00,color:#001111
+    style F fill:#ffce00,color:#001111
+    style G fill:#ffce00,color:#001111
+    style E fill:#4285f4,color:#fff
+    style D1 fill:#ffce00,color:#001111
+    style D2 fill:#ffce00,color:#001111
+    style D3 fill:#ffce00,color:#001111
+    style D4 fill:#ffce00,color:#001111
+    style D5 fill:#ffce00,color:#001111
+    style h fill:#2ecc71,color:#fff
+    style H1 fill:#c21325,color:#fff
+    style H2 fill:#00d4aa,color:#fff
+```
+
+### Firestore Collections
+
+| Collection     | Description                                            |
+| -------------- | ------------------------------------------------------ |
+| `users`        | User authentication data and basic profile information |
+| `userProfiles` | Extended user profile data including profile photos    |
+| `addresses`    | Address entries with location, photos, and metadata    |
+| `favorites`    | User favorite addresses for quick access               |
+| `reviews`      | User reviews with ratings and photos for addresses     |
+
 ## 📱 Download
 
 <div align="center">
