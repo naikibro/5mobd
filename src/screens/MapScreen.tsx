@@ -380,7 +380,11 @@ const MapScreen = () => {
         showsUserLocation={true}
         showsMyLocationButton={false}
         showsScale={true}
-        mapType="mutedStandard"
+        mapType={Platform.select({
+          ios: "mutedStandard",
+          android: "standard",
+          default: "standard",
+        })}
         provider="google"
         testID="map-screen"
       >
